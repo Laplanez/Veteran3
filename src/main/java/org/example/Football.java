@@ -1,3 +1,5 @@
+package org.example;
+
 public class Football extends Sport {
     private int team1Goals;
     private int team2Goals;

@@ -1,3 +1,5 @@
+package org.example;
+
 public abstract class Participant {
     protected String name;
     protected int id;
