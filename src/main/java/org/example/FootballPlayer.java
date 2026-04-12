@@ -26,7 +26,6 @@ class FootballMatch extends Match {
     }
 
     private void simulateTwoHalves() {
-        // Simple simulation logic calling the engine
         engine.simulate(this);
     }
 

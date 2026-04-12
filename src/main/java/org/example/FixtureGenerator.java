@@ -22,7 +22,6 @@ class FixtureGenerator {
                 Team b = pool.get(numTeams - 1 - i);
                 schedule.add(new FootballMatch(a, b, engine));
             }
-            // Rotate pool (keep first element fixed)
             Team last = pool.remove(numTeams - 1);
             pool.add(1, last);
         }

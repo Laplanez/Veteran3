@@ -24,7 +24,6 @@ class Team {
     public void setCoach(Coach c) { this.coach = c; }
     public Coach getCoach() { return coach; }
 
-    // League Stats Getters/Setters
     public int getPoints() { return points; }
     public void addPoints(int p) { this.points += p; }
     public int getGoalDifference() { return goalsFor - goalsAgainst; }
