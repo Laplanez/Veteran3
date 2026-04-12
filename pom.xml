@@ -36,7 +36,6 @@
     </dependencies>
     <build>
         <plugins>
-            <!-- mvn exec:java komutunu çalıştıran eklenti -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -45,7 +44,6 @@
                     <mainClass>org.example.Main</mainClass>
                 </configuration>
             </plugin>
-            <!-- mvn test komutunu çalıştıran eklenti -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
