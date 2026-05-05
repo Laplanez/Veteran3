@@ -24,4 +24,3 @@ abstract class Match {
     public int getScoreB() { return scoreB; }
     public boolean isFinished() { return isFinished; }
 }
-

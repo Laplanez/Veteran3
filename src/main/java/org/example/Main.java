@@ -1,74 +1,79 @@
 package org.example;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("=== Sports Manager: Milestone 2 Simulation ===");
+        // 1. Sport and Engine Setup
+        HandballSport handball = new HandballSport();
+        MatchEngine engine = handball.getMatchEngine();
 
-        League league = new League();
-        Team t1 = new Team("Veteran FC");
-        Team t2 = new Team("Eagle United");
-        Team t3 = new Team("Lion City");
-        Team t4 = new Team("Shark Base");
+        // 2. Tactics Setup
+        Tactic attackTactic = new Tactic("Attack", 1.2, 0.8);
+        Tactic defenseTactic = new Tactic("Defense", 0.8, 1.2);
 
-
-        for (int i = 0; i < 11; i++) {
-            t1.addPlayer(new FootballPlayer("Player " + i, i));
-            t2.addPlayer(new FootballPlayer("Opponent " + i, i + 100));
-            t3.addPlayer(new FootballPlayer("Lion " + i, i + 200));
-            t4.addPlayer(new FootballPlayer("Shark " + i, i + 300));
+        // 3. Team A Setup
+        Team teamA = new Team("Team Alpha");
+        teamA.setTactic(attackTactic);
+        for (int i = 0; i < 7; i++) {
+            HandballPlayer p = new HandballPlayer("A-Player" + i, 20 + i, "Field");
+            p.setAttribute("Throwing", 60);
+            p.setAttribute("Speed", 55);
+            p.setAttribute("Passing", 50);
+            p.setAttribute("Defense", 40);
+            p.setAttribute("Goalkeeping", 40);
+            teamA.addPlayer(p);
         }
 
-        league.addTeam(t1);
-        league.addTeam(t2);
-        league.addTeam(t3);
+        // 4. Team B Setup
+        Team teamB = new Team("Team Beta");
+        teamB.setTactic(defenseTactic);
+        for (int i = 0; i < 7; i++) {
+            HandballPlayer p = new HandballPlayer("B-Player" + i, 20 + i, "Field");
+            p.setAttribute("Throwing", 45);
+            p.setAttribute("Speed", 45);
+            p.setAttribute("Passing", 50);
+            p.setAttribute("Defense", 65);
+            p.setAttribute("Goalkeeping", 60);
+            teamB.addPlayer(p);
+        }
 
+        // 5. League and Fixture Generation
+        HandballLeague league = new HandballLeague();
+        league.addTeam(teamA);
+        league.addTeam(teamB);
 
-        league.addTeam(t4);
+        List<Team> teams = new ArrayList<>();
+        teams.add(teamA);
+        teams.add(teamB);
 
-        FixtureGenerator gen = new FixtureGenerator();
-        MatchEngine engine = new FootballEngine();
-        List<Match> fixtures = gen.generate(league.getTeams(), engine);
-        league.setSchedule(fixtures);
+        FixtureGenerator fg = new FixtureGenerator();
+        List<Match> matches = fg.generate(teams, engine);
 
-        System.out.println("Fixtures generated: " + fixtures.size());
+        // Manual conversion if FixtureGenerator returns FootballMatch by default
+        // normally it would return sport-specific match types
+        List<Match> handballMatches = new ArrayList<>();
+        for (Match m : matches) {
+            handballMatches.add(new HandballMatch(m.getTeamA(), m.getTeamB(), engine));
+        }
+        league.setSchedule(handballMatches);
 
+        // 6. Run Season
+        System.out.println("Starting Handball Match Simulation...");
         league.runSeason();
 
-        System.out.println("\nFinal League Standings:");
-        league.getTeams().stream()
-                .sorted((a, b) -> b.getPoints() - a.getPoints())
-                .forEach(t -> System.out.println(t.getName() + " - Pts: " + t.getPoints() + " | GD: " + t.getGoalDifference()));
+        // 7. Results Output
+        System.out.println("\n--- Match Results ---");
+        for (Match m : league.getSchedule()) {
+            System.out.println(m.getResult());
+        }
 
+        System.out.println("\n--- League Standings ---");
+        for (Team t : league.getTeams()) {
+            System.out.println("Team: " + t.getName() +
+                    " | Points: " + t.getPoints() +
+                    " | Goal Diff: " + t.getGoalDifference());
+        }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}

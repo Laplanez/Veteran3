@@ -1,13 +1,31 @@
 package org.example;
 
 public class FootballPlayer extends Player {
+
     public FootballPlayer(String name, int id) {
-        super(name, id);
-        // Default is 50 but we can change to 10 maybe
+        super(name, id, "Player");
         setAttribute("Shooting", 50);
         setAttribute("Goalkeeping", 50);
         setAttribute("Passing", 50);
         setAttribute("Speed", 50);
+    }
+
+    public FootballPlayer(String name, int id, String position) {
+        super(name, id, position);
+        setAttribute("Shooting", 50);
+        setAttribute("Goalkeeping", 50);
+        setAttribute("Passing", 50);
+        setAttribute("Speed", 50);
+    }
+
+
+    public boolean isGoalkeeper() {
+        return "Goalkeeper".equalsIgnoreCase(position);
+    }
+
+    @Override
+    public String toString() {
+        return getName() + " [" + position + "]";
     }
 }
 

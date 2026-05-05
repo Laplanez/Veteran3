@@ -1,19 +1,27 @@
 package org.example;
 
-public class HandballPlayer extends Player {
-
-
-    public HandballPlayer(String name, int id) {
-        super(name, id);
-        setAttribute("Throwing Power", 30);
-        setAttribute("Jumping", 30);
+class HandballPlayer extends Player {
+    public HandballPlayer(String name, int age, String position) {
+        super(name, age, position);
+        setAttribute("Throwing", 50);
+        setAttribute("Speed", 50);
+        setAttribute("Defense", 50);
         setAttribute("Goalkeeping", 50);
-        setAttribute("Strength", 30);
     }
 
+    public int getThrowing()    { return getAttribute("Throwing"); }
+    public int getSpeed()       { return getAttribute("Speed"); }
+    public int getDefense()     { return getAttribute("Defense"); }
+    public int getGoalkeeping() { return getAttribute("Goalkeeping"); }
 
-
-
+    @Override
+    public String toString() {
+        return getName() + " (" + getPosition() + ") "
+                + "THR:" + getThrowing()
+                + " SPD:" + getSpeed()
+                + " DEF:" + getDefense()
+                + " GK:"  + getGoalkeeping();
+    }
 }
 class HandballMatch extends Match {
     private MatchEngine engine;
@@ -25,9 +33,8 @@ class HandballMatch extends Match {
 
     @Override
     public void play() {
-        //since a handball game consists two 30 minute halves no changes has been made
-        simulateTwoHalves();
-               isFinished = true;
+        engine.simulate(this);
+        isFinished = true;
     }
 
     private void simulateTwoHalves() {
