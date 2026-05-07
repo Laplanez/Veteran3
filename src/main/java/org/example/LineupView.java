@@ -85,14 +85,19 @@ public class LineupView {
         List<Player> players = new ArrayList<>(team.getPlayers());
         int idx = 0;
 
-        // Kaleci satırı (1)
-        HBox gkRow = new HBox(10);
-        gkRow.setAlignment(Pos.CENTER);
-        if (idx < players.size()) gkRow.getChildren().add(playerNode(players.get(idx++)));
-        field.getChildren().add(gkRow);
+        // Formasyon satırları (hücum → orta → defans) — ters sırayla, kaleci en altta
+        int[] reversed = new int[lines.length];
+        for (int i = 0; i < lines.length; i++) reversed[i] = lines[lines.length - 1 - i];
 
-        // Formasyon satırları (defans → orta → hücum)
-        for (int count : lines) {
+        // Önce sahadaki oyuncuları say (kaleci hariç tüm formasyon)
+        int outfieldCount = 0;
+        for (int c : lines) outfieldCount += c;
+
+        // Kaleciyi ayır, ilk oyuncu kaleci
+        Player gk = (idx < players.size()) ? players.get(idx++) : null;
+
+        // Hücum → defans sırasıyla satırları ekle
+        for (int count : reversed) {
             HBox row = new HBox(10);
             row.setAlignment(Pos.CENTER);
             for (int i = 0; i < count && idx < players.size(); i++) {
@@ -100,6 +105,15 @@ public class LineupView {
             }
             field.getChildren().add(row);
         }
+
+        // Kaleci satırı en altta
+        if (gk != null) {
+            HBox gkRow = new HBox(10);
+            gkRow.setAlignment(Pos.CENTER);
+            gkRow.getChildren().add(playerNode(gk));
+            field.getChildren().add(gkRow);
+        }
+
 
         // Yedekler
         if (idx < players.size()) {
