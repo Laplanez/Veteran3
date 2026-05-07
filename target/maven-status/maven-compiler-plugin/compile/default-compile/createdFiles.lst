@@ -10,7 +10,7 @@ org\example\HandballLeague.class
 org\example\Participant.class
 org\example\ISport.class
 org\example\MatchEngine.class
-module-info.class
+org\example\MainFootball.class
 org\example\HandballPlayer.class
 org\example\Main.class
 org\example\Coach.class

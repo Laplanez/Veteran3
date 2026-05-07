@@ -2,7 +2,6 @@ package org.example;
 
 import java.util.List;
 
-// Im gonna add all interfaces here
 
 interface ISport {
     String getSportName();
