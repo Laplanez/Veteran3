@@ -46,12 +46,39 @@ public class JavaFXMain extends Application {
 
     private Stage primaryStage;
 
+    private String currentUser = null;
+
     @Override
     public void start(Stage stage) {
         this.primaryStage = stage;
+        // Önce giriş ekranı, başarılı olunca ana ekranı kur
+        LoginView.show(stage, username -> {
+            this.currentUser = username;
+            startMainApp(stage);
+        });
+    }
+
+    private void startMainApp(Stage stage) {
         loadNameFiles();
         setupTable();
         setupTacticPanel();
+
+        // Modern renk paleti (koyu tema + neon vurgular)
+        final String COLOR_BG       = "#0f1623";
+        final String COLOR_PANEL    = "#1a2332";
+        final String COLOR_PANEL_2  = "#222e42";
+        final String COLOR_TEXT     = "#e6edf7";
+        final String COLOR_MUTED    = "#8aa0bd";
+        final String COLOR_ACCENT   = "#22d3ee"; // cyan
+        final String COLOR_FOOTBALL = "linear-gradient(to right, #16a34a, #22c55e)";
+        final String COLOR_HANDBALL = "linear-gradient(to right, #f97316, #fbbf24)";
+        final String COLOR_PRIMARY  = "linear-gradient(to right, #2563eb, #22d3ee)";
+        final String COLOR_DANGER   = "linear-gradient(to right, #ef4444, #f97316)";
+        final String COLOR_GHOST    = "#2b3a55";
+
+        String btnBase = "-fx-font-size: 15px; -fx-padding: 12 26; -fx-text-fill: white; "
+                + "-fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 12; "
+                + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 14, 0.2, 0, 4);";
 
         btnFootball.setMaxWidth(Double.MAX_VALUE);
         btnHandball.setMaxWidth(Double.MAX_VALUE);
@@ -59,13 +86,27 @@ public class JavaFXMain extends Application {
         btnReset.setMaxWidth(Double.MAX_VALUE);
         teamSelector.setMaxWidth(Double.MAX_VALUE);
 
-        btnFootball.setStyle("-fx-font-size: 16px; -fx-padding: 12 24; -fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;");
-        btnHandball.setStyle("-fx-font-size: 16px; -fx-padding: 12 24; -fx-background-color: #e67e22; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;");
-        btnNextWeek.setStyle("-fx-font-size: 15px; -fx-padding: 10 20; -fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold;");
-        btnReset.setStyle("-fx-font-size: 13px; -fx-padding: 8 16; -fx-background-color: #95a5a6; -fx-text-fill: white; -fx-font-weight: bold;");
-        lblWeek.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
-        lblSelectTeam.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
-        teamSelector.setStyle("-fx-font-size: 14px;");
+        btnFootball.setStyle(btnBase + "-fx-background-color: " + COLOR_FOOTBALL + ";");
+        btnHandball.setStyle(btnBase + "-fx-background-color: " + COLOR_HANDBALL + ";");
+        btnNextWeek.setStyle(btnBase + "-fx-background-color: " + COLOR_PRIMARY + ";");
+        btnReset.setStyle("-fx-font-size: 13px; -fx-padding: 10 20; -fx-background-color: " + COLOR_GHOST
+                + "; -fx-text-fill: " + COLOR_TEXT + "; -fx-font-weight: bold; -fx-cursor: hand; "
+                + "-fx-background-radius: 12; -fx-border-color: #3b4a6b; -fx-border-radius: 12;");
+        lblWeek.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: " + COLOR_ACCENT + ";");
+        lblSelectTeam.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: " + COLOR_TEXT + ";");
+        teamSelector.setStyle("-fx-font-size: 14px; -fx-background-color: " + COLOR_PANEL_2
+                + "; -fx-text-fill: " + COLOR_TEXT + "; -fx-background-radius: 10; -fx-border-radius: 10;");
+
+        // Tablo modern stil
+        table.setStyle("-fx-background-color: " + COLOR_PANEL + "; -fx-control-inner-background: " + COLOR_PANEL
+                + "; -fx-control-inner-background-alt: " + COLOR_PANEL_2 + "; -fx-text-fill: " + COLOR_TEXT
+                + "; -fx-table-cell-border-color: transparent; -fx-background-radius: 12; -fx-border-radius: 12;"
+                + "-fx-border-color: #2a3954; -fx-border-width: 1;");
+
+        logs.setStyle("-fx-background-color: " + COLOR_PANEL + "; -fx-control-inner-background: " + COLOR_PANEL
+                + "; -fx-text-fill: " + COLOR_TEXT + "; -fx-font-family: 'Consolas','Menlo',monospace; "
+                + "-fx-font-size: 13px; -fx-background-radius: 12; -fx-border-radius: 12; "
+                + "-fx-border-color: #2a3954; -fx-border-width: 1;");
 
         btnNextWeek.setDisable(true);
         btnNextWeek.setVisible(false);
@@ -81,31 +122,76 @@ public class JavaFXMain extends Application {
         btnNextWeek.setOnAction(e -> playNextWeek());
         btnReset.setOnAction(e -> resetAll());
 
-        HBox sportButtons = new HBox(15, btnFootball, btnHandball);
+        HBox sportButtons = new HBox(18, btnFootball, btnHandball);
         sportButtons.setAlignment(Pos.CENTER);
 
-        HBox teamSelectBox = new HBox(10, lblSelectTeam, teamSelector);
+        HBox teamSelectBox = new HBox(12, lblSelectTeam, teamSelector);
         teamSelectBox.setAlignment(Pos.CENTER);
 
         HBox controlButtons = new HBox(15, btnNextWeek, btnReset);
         controlButtons.setAlignment(Pos.CENTER);
 
-        Label title = new Label("Spor Simülatörü");
-        title.setStyle("-fx-font-size: 22px; -fx-font-weight: bold;");
+        // Üst başlık şeridi
+        Label brand = new Label("⚡ Veteran3");
+        brand.setStyle("-fx-font-size: 26px; -fx-font-weight: 900; -fx-text-fill: " + COLOR_ACCENT
+                + "; -fx-effect: dropshadow(gaussian, rgba(34,211,238,0.55), 12, 0.3, 0, 0);");
+        Label subtitle = new Label("Spor Simülatörü");
+        subtitle.setStyle("-fx-font-size: 13px; -fx-text-fill: " + COLOR_MUTED + "; -fx-font-weight: bold;");
+        VBox brandBox = new VBox(0, brand, subtitle);
+        brandBox.setAlignment(Pos.CENTER_LEFT);
 
-        VBox right = new VBox(10, new Label("Maç Sonuçları"), logs, tacticPanel);
+        Label userBadge = new Label("👤  " + (currentUser == null ? "Misafir" : currentUser));
+        userBadge.setStyle("-fx-font-size: 13px; -fx-text-fill: " + COLOR_TEXT
+                + "; -fx-padding: 8 16; -fx-background-color: " + COLOR_PANEL_2
+                + "; -fx-background-radius: 999; -fx-border-radius: 999; -fx-border-color: #2f3f5e; -fx-font-weight: bold;");
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        HBox header = new HBox(12, brandBox, spacer, userBadge);
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.setPadding(new Insets(14, 20, 14, 20));
+        header.setStyle("-fx-background-color: linear-gradient(to right, #131c2e, #1a2540);"
+                + " -fx-background-radius: 16; -fx-border-radius: 16;"
+                + " -fx-border-color: #2a3954; -fx-border-width: 1;"
+                + " -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 18, 0.2, 0, 6);");
+
+        // Sağ panel başlığı
+        Label logsTitle = new Label("📜 Maç Sonuçları");
+        logsTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: " + COLOR_ACCENT + ";");
+
+        VBox right = new VBox(10, logsTitle, logs, tacticPanel);
+        right.setPadding(new Insets(14));
+        right.setStyle("-fx-background-color: " + COLOR_PANEL + "; -fx-background-radius: 16;"
+                + " -fx-border-color: #2a3954; -fx-border-radius: 16; -fx-border-width: 1;");
         VBox.setVgrow(logs, Priority.ALWAYS);
 
-        HBox content = new HBox(15, table, right);
-        HBox.setHgrow(table, Priority.ALWAYS);
+        Label tableTitle = new Label("🏆 Puan Durumu");
+        tableTitle.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: " + COLOR_ACCENT + ";");
+        VBox left = new VBox(10, tableTitle, table);
+        left.setPadding(new Insets(14));
+        left.setStyle("-fx-background-color: " + COLOR_PANEL + "; -fx-background-radius: 16;"
+                + " -fx-border-color: #2a3954; -fx-border-radius: 16; -fx-border-width: 1;");
+        VBox.setVgrow(table, Priority.ALWAYS);
+
+        HBox content = new HBox(16, left, right);
+        HBox.setHgrow(left, Priority.ALWAYS);
         HBox.setHgrow(right, Priority.ALWAYS);
 
-        VBox root = new VBox(12, title, sportButtons, teamSelectBox, lblWeek, controlButtons, content);
-        root.setPadding(new Insets(15));
+        // Kontrol kartı
+        VBox controlsCard = new VBox(12, sportButtons, teamSelectBox, lblWeek, controlButtons);
+        controlsCard.setAlignment(Pos.CENTER);
+        controlsCard.setPadding(new Insets(18));
+        controlsCard.setStyle("-fx-background-color: " + COLOR_PANEL + "; -fx-background-radius: 16;"
+                + " -fx-border-color: #2a3954; -fx-border-radius: 16; -fx-border-width: 1;");
+
+        VBox root = new VBox(14, header, controlsCard, content);
+        root.setPadding(new Insets(18));
+        root.setStyle("-fx-background-color: linear-gradient(to bottom right, " + COLOR_BG + ", #0a0f1c);");
         VBox.setVgrow(content, Priority.ALWAYS);
 
-        stage.setScene(new Scene(root, 1050, 650));
-        stage.setTitle("Spor Simülatörü - Hafta Hafta");
+        Scene scene = new Scene(root, 1100, 700);
+        stage.setScene(scene);
+        stage.setTitle("⚡ Arena — Spor Simülatörü");
         stage.show();
     }
 
@@ -218,9 +304,11 @@ public class JavaFXMain extends Application {
         });
 
         Separator sep = new Separator();
-        tacticPanel.setSpacing(8);
-        tacticPanel.setPadding(new Insets(10));
-        tacticPanel.setStyle("-fx-background-color: #2c3e50; -fx-background-radius: 8; -fx-border-color: #e74c3c; -fx-border-radius: 8; -fx-border-width: 2;");
+        tacticPanel.setSpacing(10);
+        tacticPanel.setPadding(new Insets(14));
+        tacticPanel.setStyle("-fx-background-color: linear-gradient(to bottom, #1f2a44, #16203a);"
+                + " -fx-background-radius: 14; -fx-border-color: #ef4444; -fx-border-radius: 14; -fx-border-width: 2;"
+                + " -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.35), 16, 0.2, 0, 4);");
         tacticPanel.getChildren().addAll(lblTactic, sep, lblInfo, rbAttack, rbBalanced, rbDefense, btnContinue);
     }
 
@@ -238,6 +326,7 @@ public class JavaFXMain extends Application {
         lblSelectTeam.setVisible(true);
         btnFootball.setDisable(true);
         btnHandball.setDisable(true);
+        teamSelector.setStyle("-fx-prompt-text-fill: white;");
         teamSelector.setOnAction(e -> {
             String selected = teamSelector.getValue();
             if (selected != null) initSeason(selected);
