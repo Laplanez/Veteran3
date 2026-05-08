@@ -353,9 +353,13 @@ public class JavaFXMain extends Application {
         btnNextWeek.setDisable(true);
         btnReset.setDisable(true);
 
-        // 🆕 Önce diziliş seç
+        // Önce diziliş seç
         String formation = LineupSelectorView.show(primaryStage, myTeam, false);
         logs.getItems().add("   📋 " + myTeam.getName() + " dizilişi: " + formation);
+
+        // 🆕 İlk 11'i pozisyonuna göre seç
+        SquadSelectorView.show(primaryStage, myTeam, formation, false);
+        logs.getItems().add("   👥 İlk 11 onaylandı.");
         logs.scrollTo(logs.getItems().size() - 1);
 
         // Sonra sahadaki oyuncuları göster
@@ -379,6 +383,8 @@ public class JavaFXMain extends Application {
                 }
             }
 
+            // 🆕 Devre arası: önce yedek değişikliği menüsü, sonra taktik
+            showSubstitutionAndWait();
             showTacticMenuAndWait();
 
             int powerA2 = calculateFootballPower(m.getTeamA());
@@ -408,9 +414,13 @@ public class JavaFXMain extends Application {
     }
 
     private void checkGoal(FootballMatch fm, Random random, int powerA, int powerB, int periodEnd) {
+        // Sadece sahadaki ilk 11'den golcü seçilsin
+        int startersA = Math.min(11, fm.getTeamA().getPlayers().size());
+        int startersB = Math.min(11, fm.getTeamB().getPlayers().size());
+
         if (random.nextInt(100) < (powerA / 8)) {
             fm.addGoalA();
-            Player scorer = fm.getTeamA().getPlayers().get(random.nextInt(fm.getTeamA().getPlayers().size()));
+            Player scorer = fm.getTeamA().getPlayers().get(random.nextInt(startersA));
             int goalMin = periodEnd - 14 + random.nextInt(14);
             final int sA = fm.getScoreA(), sB = fm.getScoreB();
             Platform.runLater(() -> {
@@ -421,7 +431,7 @@ public class JavaFXMain extends Application {
         }
         if (random.nextInt(100) < (powerB / 8)) {
             fm.addGoalB();
-            Player scorer = fm.getTeamB().getPlayers().get(random.nextInt(fm.getTeamB().getPlayers().size()));
+            Player scorer = fm.getTeamB().getPlayers().get(random.nextInt(startersB));
             int goalMin = periodEnd - 14 + random.nextInt(14);
             final int sA = fm.getScoreA(), sB = fm.getScoreB();
             Platform.runLater(() -> {
@@ -437,9 +447,13 @@ public class JavaFXMain extends Application {
         btnNextWeek.setDisable(true);
         btnReset.setDisable(true);
 
-        // 🆕 Önce diziliş seç
+        // Önce diziliş seç
         String formation = LineupSelectorView.show(primaryStage, myTeam, true);
         logs.getItems().add("   📋 " + myTeam.getName() + " dizilişi: " + formation);
+
+        // 🆕 İlk 7'yi pozisyonuna göre seç
+        SquadSelectorView.show(primaryStage, myTeam, formation, true);
+        logs.getItems().add("   👥 İlk 7 onaylandı.");
         logs.scrollTo(logs.getItems().size() - 1);
 
         // Sonra sahadaki oyuncuları göster
@@ -469,6 +483,8 @@ public class JavaFXMain extends Application {
                 logs.scrollTo(logs.getItems().size() - 1);
             });
 
+            // 🆕 Devre arası: önce yedek değişikliği menüsü, sonra taktik
+            showSubstitutionAndWait();
             showTacticMenuAndWait();
 
             int attackA2 = calcPower(m.getTeamA(), "Throwing", "Speed");
@@ -517,10 +533,14 @@ public class JavaFXMain extends Application {
     private void checkHandballGoal(HandballMatch hm, Random random,
                                    int attackA, int defenseB, int attackB, int defenseA,
                                    int min, int sec) {
+        // Golcü sadece sahadaki ilk 7'den
+        int startersA = Math.min(7, hm.getTeamA().getPlayers().size());
+        int startersB = Math.min(7, hm.getTeamB().getPlayers().size());
+
         double chanceA = ((double) attackA / (attackA + defenseB)) * 0.50;
         if (random.nextDouble() < chanceA) {
             hm.addGoalA();
-            Player scorer = hm.getTeamA().getPlayers().get(random.nextInt(hm.getTeamA().getPlayers().size()));
+            Player scorer = hm.getTeamA().getPlayers().get(random.nextInt(startersA));
             final int sA = hm.getScoreA(), sB = hm.getScoreB();
             Platform.runLater(() -> {
                 logs.getItems().add(String.format("   🤾 [%02d:%02d] GOL! %s — %s (%d-%d)",
@@ -531,7 +551,7 @@ public class JavaFXMain extends Application {
         double chanceB = ((double) attackB / (attackB + defenseA)) * 0.50;
         if (random.nextDouble() < chanceB) {
             hm.addGoalB();
-            Player scorer = hm.getTeamB().getPlayers().get(random.nextInt(hm.getTeamB().getPlayers().size()));
+            Player scorer = hm.getTeamB().getPlayers().get(random.nextInt(startersB));
             final int sA = hm.getScoreA(), sB = hm.getScoreB();
             Platform.runLater(() -> {
                 logs.getItems().add(String.format("   🤾 [%02d:%02d] GOL! %s — %s (%d-%d)",
@@ -555,6 +575,40 @@ public class JavaFXMain extends Application {
             tacticPanel.setManaged(true);
         });
         try { tacticLatch.await(); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+    }
+
+    // 🆕 Devre arası yedek değişikliği — FX thread'inde blocking dialog açar, biter ve simülasyon devam eder
+    private void showSubstitutionAndWait() {
+        CountDownLatch latch = new CountDownLatch(1);
+        int beforeSize = myTeam.getPlayers().size();
+        // Saha kadrosu snapshot — log için
+        int starters = isHandball ? 7 : 11;
+        List<Player> beforeField = new ArrayList<>(myTeam.getPlayers().subList(0, Math.min(starters, beforeSize)));
+
+        Platform.runLater(() -> {
+            try {
+                logs.getItems().add("");
+                logs.getItems().add("   🔁 DEVRE ARASI — Oyuncu değişikliği menüsü");
+                logs.scrollTo(logs.getItems().size() - 1);
+                SubstitutionView.show(primaryStage, myTeam, isHandball);
+                // Değişen oyuncuları logla
+                List<Player> afterField = new ArrayList<>(
+                        myTeam.getPlayers().subList(0, Math.min(starters, myTeam.getPlayers().size())));
+                int subs = 0;
+                for (int i = 0; i < beforeField.size(); i++) {
+                    if (i >= afterField.size() || beforeField.get(i) != afterField.get(i)) subs++;
+                }
+                if (subs > 0) {
+                    logs.getItems().add("   ✏ " + subs + " değişiklik yapıldı.");
+                } else {
+                    logs.getItems().add("   ⏭ Değişiklik yapılmadı.");
+                }
+                logs.scrollTo(logs.getItems().size() - 1);
+            } finally {
+                latch.countDown();
+            }
+        });
+        try { latch.await(); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
     }
 
     // ==================== SESSİZ HENTBOL ====================
@@ -581,7 +635,9 @@ public class JavaFXMain extends Application {
 
     // ==================== YARDIMCILAR ====================
     private int calculateFootballPower(Team team) {
-        double base = team.getPlayers().stream()
+        // Sadece ilk 11'in gücü
+        int starters = Math.min(11, team.getPlayers().size());
+        double base = team.getPlayers().subList(0, starters).stream()
                 .mapToInt(p -> p.getAttribute("Shooting") + p.getAttribute("Speed"))
                 .average().orElse(50);
         if (team.getTactic() != null) base *= team.getTactic().getAttackModifier();
@@ -589,7 +645,9 @@ public class JavaFXMain extends Application {
     }
 
     private int calcPower(Team team, String attr1, String attr2) {
-        return (int) team.getPlayers().stream()
+        // Sadece ilk 7'nin gücü
+        int starters = Math.min(7, team.getPlayers().size());
+        return (int) team.getPlayers().subList(0, starters).stream()
                 .mapToInt(p -> (p.getAttribute(attr1) + p.getAttribute(attr2)) / 2)
                 .average().orElse(50);
     }
@@ -669,10 +727,15 @@ public class JavaFXMain extends Application {
     }
 
     // ==================== OYUNCU OLUŞTUR ====================
+    // 🆕 18 oyuncu: 2 GK + 6 DEF + 6 MID + 4 FW (yedekleri pozisyona göre seçebilmek için)
     private void initFootballPlayers(Team t, Set<String> usedNames) {
-        String[] positions = {"Goalkeeper","Defender","Defender","Defender","Defender",
-                "Midfielder","Midfielder","Midfielder","Forward","Forward","Forward"};
-        for (int i = 0; i < 11; i++) {
+        String[] positions = {
+                "Goalkeeper","Goalkeeper",
+                "Defender","Defender","Defender","Defender","Defender","Defender",
+                "Midfielder","Midfielder","Midfielder","Midfielder","Midfielder","Midfielder",
+                "Forward","Forward","Forward","Forward"
+        };
+        for (int i = 0; i < positions.length; i++) {
             String playerName = randomFullName(usedNames);
             FootballPlayer p = new FootballPlayer(playerName, i + 1, positions[i]);
             p.setAttribute("Shooting", 50 + (int)(Math.random() * 25));
@@ -683,9 +746,13 @@ public class JavaFXMain extends Application {
         }
     }
 
+    // 🆕 12 oyuncu: 2 GK + 10 outfield (LW/LB/CB/RB/RW/PV ikişerli)
     private void initHandballPlayers(Team t, Set<String> usedNames) {
-        String[] positions = {"GK","LW","LB","CB","RB","RW","PV"};
-        for (int i = 0; i < 7; i++) {
+        String[] positions = {
+                "GK","GK",
+                "LW","LW","LB","LB","CB","CB","RB","RB","RW","PV"
+        };
+        for (int i = 0; i < positions.length; i++) {
             String playerName = randomFullName(usedNames);
             HandballPlayer p = new HandballPlayer(playerName, 20 + i, positions[i]);
             p.setAttribute("Throwing", 65 + (int)(Math.random() * 20));
