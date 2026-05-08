@@ -16,15 +16,24 @@ import java.util.*;
 
 public class LineupView {
 
-    /** Geri uyumluluk için eski imza — varsayılan dizilişle gösterir. */
+    // === Tema paleti ===
+    private static final String BG        = "#0f1623";
+    private static final String BG2       = "#0a0f1c";
+    private static final String PANEL     = "#1a2332";
+    private static final String TEXT      = "#e6edf7";
+    private static final String MUTED     = "#8aa0bd";
+    private static final String ACCENT    = "#22d3ee";
+    private static final String BORDER    = "#2a3954";
+    private static final String SUCCESS   = "linear-gradient(to right, #16a34a, #22c55e)";
+    // Saha degradeleri (oyun temasına uygun)
+    private static final String FIELD_MINE  = "linear-gradient(to bottom, #14532d, #166534)";
+    private static final String FIELD_OPP   = "linear-gradient(to bottom, #1e3a8a, #1e40af)";
+    private static final String VS_COLOR    = "linear-gradient(to right, #ef4444, #f97316)";
+
     public static void show(Stage owner, Team teamA, Team teamB, boolean isHandball) {
         show(owner, teamA, teamB, isHandball, null, null);
     }
 
-    /**
-     * @param myTeam   hangi takım kullanıcının (null ise ikisi de varsayılan)
-     * @param formation seçilen diziliş, ör. "4-3-3 (Hücum)" / "5-1 (Dengeli)"
-     */
     public static void show(Stage owner, Team teamA, Team teamB,
                             boolean isHandball, Team myTeam, String formation) {
         Stage dialog = new Stage();
@@ -32,98 +41,105 @@ public class LineupView {
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setTitle("Maç Öncesi Diziliş");
 
-        Label title = new Label((isHandball ? "🤾 " : "⚽ ")
-                + teamA.getName() + "  vs  " + teamB.getName());
-        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+        Label title = new Label((isHandball ? "🤾  " : "⚽  ")
+                + teamA.getName() + "   vs   " + teamB.getName());
+        title.setStyle("-fx-font-size: 22px; -fx-font-weight: 900; -fx-text-fill: " + ACCENT + ";");
+
+        Label subtitle = new Label("Maç öncesi diziliş — kadrolar sahada");
+        subtitle.setStyle("-fx-font-size: 12px; -fx-text-fill: " + MUTED + ";");
 
         String defaultFormation = isHandball ? "6-0" : "4-4-2";
         String formA = (myTeam == teamA && formation != null) ? formation : defaultFormation;
         String formB = (myTeam == teamB && formation != null) ? formation : defaultFormation;
 
-        VBox fieldA = buildField(teamA, formA, "#27ae60", true);
-        VBox fieldB = buildField(teamB, formB, "#2980b9", false);
+        VBox fieldA = buildField(teamA, formA, FIELD_MINE, myTeam == teamA);
+        VBox fieldB = buildField(teamB, formB, FIELD_OPP,  myTeam == teamB);
 
         Label vs = new Label("VS");
-        vs.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #e74c3c;");
+        vs.setStyle("-fx-font-size: 30px; -fx-font-weight: 900; -fx-text-fill: white;"
+                + " -fx-background-color: " + VS_COLOR + ";"
+                + " -fx-padding: 10 18; -fx-background-radius: 999;");
 
-        HBox fields = new HBox(15, fieldA, vs, fieldB);
+        HBox fields = new HBox(18, fieldA, vs, fieldB);
         fields.setAlignment(Pos.CENTER);
         HBox.setHgrow(fieldA, Priority.ALWAYS);
         HBox.setHgrow(fieldB, Priority.ALWAYS);
 
-        Button btnStart = new Button("▶ Maça Başla");
+        Button btnStart = new Button("▶  Maça Başla");
         btnStart.setMaxWidth(Double.MAX_VALUE);
-        btnStart.setStyle("-fx-font-size: 15px; -fx-padding: 10; -fx-background-color: #2ecc71; "
-                + "-fx-text-fill: white; -fx-font-weight: bold;");
+        btnStart.setStyle("-fx-font-size: 15px; -fx-padding: 12 22; -fx-background-color: " + SUCCESS + ";"
+                + " -fx-text-fill: white; -fx-font-weight: bold;"
+                + " -fx-background-radius: 12; -fx-border-radius: 12; -fx-cursor: hand;");
         btnStart.setOnAction(e -> dialog.close());
 
-        VBox root = new VBox(15, title, fields, btnStart);
-        root.setPadding(new Insets(15));
-        root.setStyle("-fx-background-color: #ecf0f1;");
+        VBox card = new VBox(15, title, subtitle, fields, btnStart);
+        card.setPadding(new Insets(20));
+        card.setStyle("-fx-background-color: " + PANEL + "; -fx-background-radius: 16;"
+                + " -fx-border-color: " + BORDER + "; -fx-border-radius: 16; -fx-border-width: 1;");
 
-        dialog.setScene(new Scene(root, 1000, 650));
+        StackPane root = new StackPane(card);
+        root.setPadding(new Insets(18));
+        root.setStyle("-fx-background-color: linear-gradient(to bottom right, " + BG + ", " + BG2 + ");");
+
+        dialog.setScene(new Scene(root, 1040, 700));
         dialog.showAndWait();
     }
 
     /** Takım için saha + formasyona göre dizilmiş oyuncular. */
-    private static VBox buildField(Team team, String formation, String bgColor, boolean isMine) {
+    private static VBox buildField(Team team, String formation, String bgGradient, boolean isMine) {
         VBox field = new VBox(18);
         field.setAlignment(Pos.TOP_CENTER);
-        field.setPadding(new Insets(15));
-        field.setStyle("-fx-background-color: " + bgColor + "; -fx-background-radius: 10;");
+        field.setPadding(new Insets(16));
+        field.setStyle("-fx-background-color: " + bgGradient + ";"
+                + " -fx-background-radius: 14;"
+                + " -fx-border-color: " + (isMine ? ACCENT : BORDER) + ";"
+                + " -fx-border-width: 2; -fx-border-radius: 14;");
         field.setMinWidth(380);
 
-        Label name = new Label(team.getName() + (isMine ? "  (Senin Takımın)" : ""));
-        name.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: white;");
+        Label name = new Label(team.getName() + (isMine ? "   (Senin Takımın)" : ""));
+        name.setStyle("-fx-font-size: 15px; -fx-font-weight: 900; -fx-text-fill: white;");
         field.getChildren().add(name);
 
         Label formLbl = new Label("Diziliş: " + formation);
-        formLbl.setStyle("-fx-font-size: 12px; -fx-text-fill: white;");
+        formLbl.setStyle("-fx-font-size: 12px; -fx-text-fill: #d8e1ec; -fx-font-weight: bold;"
+                + " -fx-background-color: rgba(0,0,0,0.25); -fx-padding: 4 10;"
+                + " -fx-background-radius: 999;");
         field.getChildren().add(formLbl);
 
         int[] lines = parseFormation(formation);
         List<Player> players = new ArrayList<>(team.getPlayers());
         int idx = 0;
 
-        // Formasyon satırları (hücum → orta → defans) — ters sırayla, kaleci en altta
         int[] reversed = new int[lines.length];
         for (int i = 0; i < lines.length; i++) reversed[i] = lines[lines.length - 1 - i];
 
-        // Önce sahadaki oyuncuları say (kaleci hariç tüm formasyon)
-        int outfieldCount = 0;
-        for (int c : lines) outfieldCount += c;
-
-        // Kaleciyi ayır, ilk oyuncu kaleci
         Player gk = (idx < players.size()) ? players.get(idx++) : null;
 
-        // Hücum → defans sırasıyla satırları ekle
         for (int count : reversed) {
-            HBox row = new HBox(10);
+            HBox row = new HBox(12);
             row.setAlignment(Pos.CENTER);
             for (int i = 0; i < count && idx < players.size(); i++) {
-                row.getChildren().add(playerNode(players.get(idx++)));
+                row.getChildren().add(playerNode(players.get(idx++), isMine));
             }
             field.getChildren().add(row);
         }
 
-        // Kaleci satırı en altta
         if (gk != null) {
             HBox gkRow = new HBox(10);
             gkRow.setAlignment(Pos.CENTER);
-            gkRow.getChildren().add(playerNode(gk));
+            gkRow.getChildren().add(playerNode(gk, isMine));
             field.getChildren().add(gkRow);
         }
 
-
-        // Yedekler
         if (idx < players.size()) {
-            Label benchLbl = new Label("Yedekler");
-            benchLbl.setStyle("-fx-font-size: 11px; -fx-text-fill: white; -fx-font-style: italic;");
+            Label benchLbl = new Label("— Yedekler —");
+            benchLbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #d8e1ec; -fx-font-style: italic;"
+                    + " -fx-padding: 6 0 2 0;");
             field.getChildren().add(benchLbl);
             HBox bench = new HBox(8);
             bench.setAlignment(Pos.CENTER);
             while (idx < players.size()) {
-                bench.getChildren().add(playerNode(players.get(idx++)));
+                bench.getChildren().add(playerNode(players.get(idx++), isMine));
             }
             field.getChildren().add(bench);
         }
@@ -133,7 +149,7 @@ public class LineupView {
 
     private static int[] parseFormation(String f) {
         try {
-            String nums = f.split(" ")[0]; // "4-3-3 (Hücum)" -> "4-3-3"
+            String nums = f.split(" ")[0];
             String[] parts = nums.split("-");
             int[] r = new int[parts.length];
             for (int i = 0; i < parts.length; i++) r[i] = Integer.parseInt(parts[i].trim());
@@ -143,19 +159,21 @@ public class LineupView {
         }
     }
 
-    private static Node playerNode(Player p) {
-        VBox box = new VBox(3);
+    private static Node playerNode(Player p, boolean isMine) {
+        VBox box = new VBox(4);
         box.setAlignment(Pos.CENTER);
 
-        Circle dot = new Circle(14, Color.WHITE);
-        dot.setStroke(Color.BLACK);
+        Circle dot = new Circle(15, isMine ? Color.web("#22d3ee") : Color.web("#e6edf7"));
+        dot.setStroke(Color.web("#0f1623"));
+        dot.setStrokeWidth(2);
 
         Label nameLbl = new Label(p.getName());
-        nameLbl.setStyle("-fx-text-fill: white; -fx-font-size: 10px; -fx-font-weight: bold;");
+        nameLbl.setStyle("-fx-text-fill: white; -fx-font-size: 10px; -fx-font-weight: bold;"
+                + " -fx-background-color: rgba(0,0,0,0.35); -fx-padding: 2 6;"
+                + " -fx-background-radius: 6; -fx-text-alignment: center;");
         nameLbl.setWrapText(true);
-        nameLbl.setMaxWidth(75);
+        nameLbl.setMaxWidth(85);
         nameLbl.setAlignment(Pos.CENTER);
-        nameLbl.setStyle(nameLbl.getStyle() + "; -fx-text-alignment: center;");
 
         box.getChildren().addAll(dot, nameLbl);
         return box;

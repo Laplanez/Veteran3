@@ -11,15 +11,21 @@ import javafx.stage.Stage;
 
 import java.util.*;
 
-/**
- * Maç öncesi, formasyona göre saha kadrosu seçimi.
- * Her pozisyon için sadece o pozisyona uygun oyuncular ComboBox'ta listelenir.
- * Onaylanınca myTeam.getPlayers() listesi yeniden sıralanır:
- *   [GK, DEF*, MID*, FW*  (futbol)  |  GK, outfield*  (hentbol)]  ardından yedekler.
- *
- * Dönüş: true = onaylandı, false = iptal (varsayılan otomatik dolduruldu).
- */
+
 public class SquadSelectorView {
+
+    // === Tema paleti ===
+    private static final String BG       = "#0f1623";
+    private static final String BG2      = "#0a0f1c";
+    private static final String PANEL    = "#1a2332";
+    private static final String PANEL_2  = "#222e42";
+    private static final String TEXT     = "#e6edf7";
+    private static final String MUTED    = "#8aa0bd";
+    private static final String ACCENT   = "#22d3ee";
+    private static final String BORDER   = "#2a3954";
+    private static final String GHOST    = "#2b3a55";
+    private static final String SUCCESS  = "linear-gradient(to right, #16a34a, #22c55e)";
+    private static final String DANGER   = "#ff8a8a";
 
     public static boolean show(Stage owner, Team myTeam, String formation, boolean isHandball) {
         Stage dialog = new Stage();
@@ -27,27 +33,38 @@ public class SquadSelectorView {
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setTitle("İlk Kadro Seç — " + myTeam.getName());
 
-        // Slot tanımları: her slot = (etiket, uygun pozisyon kümesi)
         List<Slot> slots = buildSlots(formation, isHandball);
 
-        Label title = new Label("📋 " + myTeam.getName() + " — İlk " + slots.size() + " seç");
-        title.setStyle("-fx-font-size: 17px; -fx-font-weight: bold;");
+        Label title = new Label("📋  " + myTeam.getName() + " — İlk " + slots.size() + " seç");
+        title.setStyle("-fx-font-size: 18px; -fx-font-weight: 900; -fx-text-fill: " + ACCENT + ";");
+
         Label sub = new Label("Diziliş: " + formation
-                + "   |  Her oyuncu yalnızca kendi pozisyonundan seçilebilir.");
-        sub.setStyle("-fx-font-size: 12px; -fx-text-fill: #555;");
+                + "   |   Her oyuncu yalnızca kendi pozisyonundan seçilebilir.");
+        sub.setStyle("-fx-font-size: 12px; -fx-text-fill: " + MUTED + ";");
 
         GridPane grid = new GridPane();
-        grid.setHgap(10);
+        grid.setHgap(12);
         grid.setVgap(8);
-        grid.setPadding(new Insets(10));
+        grid.setPadding(new Insets(14));
+        grid.setStyle("-fx-background-color: " + PANEL_2 + "; -fx-background-radius: 12;"
+                + " -fx-border-color: " + BORDER + "; -fx-border-radius: 12; -fx-border-width: 1;");
 
         List<ComboBox<Player>> boxes = new ArrayList<>();
+        String comboStyle =
+                "-fx-background-color: " + PANEL + ";"
+                        + " -fx-text-fill: " + TEXT + ";"
+                        + " -fx-background-radius: 10; -fx-border-radius: 10;"
+                        + " -fx-border-color: " + BORDER + "; -fx-border-width: 1;"
+                        + " -fx-font-size: 13px;";
+
         for (int i = 0; i < slots.size(); i++) {
             Slot s = slots.get(i);
             Label l = new Label(s.label);
-            l.setStyle("-fx-font-weight: bold; -fx-min-width: 90;");
+            l.setStyle("-fx-font-weight: bold; -fx-min-width: 100; -fx-text-fill: " + TEXT + ";"
+                    + " -fx-font-size: 13px;");
             ComboBox<Player> cb = new ComboBox<>();
-            cb.setPrefWidth(280);
+            cb.setPrefWidth(290);
+            cb.setStyle(comboStyle);
             cb.setItems(FXCollections.observableArrayList(eligible(myTeam, s)));
             cb.setConverter(new javafx.util.StringConverter<Player>() {
                 @Override public String toString(Player p) {
@@ -55,36 +72,62 @@ public class SquadSelectorView {
                 }
                 @Override public Player fromString(String s) { return null; }
             });
+            // Beyaz isim + pozisyon (hem dropdown hem seçili gösterim)
+            javafx.util.Callback<ListView<Player>, ListCell<Player>> cellFactory = lv -> new ListCell<Player>() {
+                @Override protected void updateItem(Player p, boolean empty) {
+                    super.updateItem(p, empty);
+                    if (empty || p == null) {
+                        setText(null); setGraphic(null);
+                        setStyle("-fx-background-color: " + PANEL + ";");
+                        return;
+                    }
+                    Label nameL = new Label(p.getName());
+                    nameL.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px;");
+                    Label posL = new Label("[" + p.getPosition() + "]");
+                    posL.setStyle("-fx-text-fill: white; -fx-font-size: 12px; -fx-opacity: 0.95;");
+                    HBox row = new HBox(8, nameL, posL);
+                    row.setAlignment(Pos.CENTER_LEFT);
+                    setText(null);
+                    setGraphic(row);
+                    setStyle("-fx-background-color: " + (isSelected() ? PANEL_2 : PANEL) + ";"
+                            + " -fx-padding: 6 10;");
+                }
+            };
+            cb.setCellFactory(cellFactory);
+            cb.setButtonCell(cellFactory.call(null));
             grid.add(l, 0, i);
             grid.add(cb, 1, i);
             boxes.add(cb);
         }
 
-        // Otomatik ön doldurma: her slota uygun ilk seçilmemiş oyuncuyu ata
         autoFill(boxes, slots, myTeam);
 
         Label warn = new Label();
-        warn.setStyle("-fx-text-fill: #c0392b; -fx-font-size: 12px;");
+        warn.setStyle("-fx-text-fill: " + DANGER + "; -fx-font-size: 12px; -fx-font-weight: bold;");
 
-        Button confirm = new Button("✅ Onayla ve Dizilişi Görüntüle");
+        Button confirm = new Button("✅  Onayla ve Dizilişi Görüntüle");
         confirm.setMaxWidth(Double.MAX_VALUE);
-        confirm.setStyle("-fx-font-size: 14px; -fx-padding: 10; -fx-background-color: #2ecc71; "
-                + "-fx-text-fill: white; -fx-font-weight: bold;");
+        confirm.setStyle(
+                "-fx-font-size: 14px; -fx-padding: 12 22; -fx-background-color: " + SUCCESS + ";"
+                        + " -fx-text-fill: white; -fx-font-weight: bold;"
+                        + " -fx-background-radius: 12; -fx-border-radius: 12; -fx-cursor: hand;");
 
-        Button autoBtn = new Button("⚡ Otomatik Doldur");
-        autoBtn.setStyle("-fx-padding: 6 12;");
+        Button autoBtn = new Button("⚡  Otomatik Doldur");
+        autoBtn.setStyle(
+                "-fx-padding: 10 16; -fx-background-color: " + GHOST + ";"
+                        + " -fx-text-fill: " + TEXT + "; -fx-font-weight: bold;"
+                        + " -fx-background-radius: 10; -fx-border-radius: 10;"
+                        + " -fx-border-color: " + BORDER + "; -fx-border-width: 1; -fx-cursor: hand;");
         autoBtn.setOnAction(e -> autoFill(boxes, slots, myTeam));
 
         final boolean[] ok = {false};
         confirm.setOnAction(e -> {
-            // Doğrulama: hepsi dolu, tekrar yok
             Set<Player> seen = new HashSet<>();
             for (ComboBox<Player> cb : boxes) {
                 Player p = cb.getValue();
-                if (p == null) { warn.setText("⚠ Tüm slotları doldur."); return; }
-                if (!seen.add(p)) { warn.setText("⚠ Aynı oyuncu birden çok slotta: " + p.getName()); return; }
+                if (p == null) { warn.setText("⚠  Tüm slotları doldur."); return; }
+                if (!seen.add(p)) { warn.setText("⚠  Aynı oyuncu birden çok slotta: " + p.getName()); return; }
             }
-            // Reorder: önce seçilenler (slot sırasıyla), sonra geri kalanlar (yedek)
             applySquad(myTeam, boxes);
             ok[0] = true;
             dialog.close();
@@ -97,15 +140,24 @@ public class SquadSelectorView {
         ScrollPane scroll = new ScrollPane(grid);
         scroll.setFitToWidth(true);
         scroll.setPrefHeight(380);
+        scroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;"
+                + " -fx-border-color: transparent;");
 
-        VBox root = new VBox(10, title, sub, new Separator(), scroll, warn, btnRow);
-        root.setPadding(new Insets(15));
-        root.setStyle("-fx-background-color: #ecf0f1;");
+        Separator sep = new Separator();
+        sep.setStyle("-fx-background-color: " + BORDER + ";");
 
-        dialog.setScene(new Scene(root, 480, 600));
+        VBox card = new VBox(12, title, sub, sep, scroll, warn, btnRow);
+        card.setPadding(new Insets(20));
+        card.setStyle("-fx-background-color: " + PANEL + "; -fx-background-radius: 16;"
+                + " -fx-border-color: " + BORDER + "; -fx-border-radius: 16; -fx-border-width: 1;");
+
+        StackPane root = new StackPane(card);
+        root.setPadding(new Insets(18));
+        root.setStyle("-fx-background-color: linear-gradient(to bottom right, " + BG + ", " + BG2 + ");");
+
+        dialog.setScene(new Scene(root, 520, 640));
         dialog.showAndWait();
 
-        // Dialog kapanırken onaylanmadıysa otomatik doldurma uygula
         if (!ok[0]) {
             autoFill(boxes, slots, myTeam);
             applySquad(myTeam, boxes);
@@ -116,7 +168,7 @@ public class SquadSelectorView {
     // ========================================================
     private static class Slot {
         final String label;
-        final Set<String> positions; // boş => tüm outfield
+        final Set<String> positions;
         final boolean isGK;
         Slot(String label, Set<String> positions, boolean isGK) {
             this.label = label; this.positions = positions; this.isGK = isGK;
@@ -126,17 +178,13 @@ public class SquadSelectorView {
     private static List<Slot> buildSlots(String formation, boolean isHandball) {
         List<Slot> slots = new ArrayList<>();
         if (isHandball) {
-            // 1 GK + 6 outfield (formasyonun nasıl olduğu önemli değil; pozisyon kuralı sade)
             slots.add(new Slot("Kaleci",  setOf("GK"), true));
             for (int i = 1; i <= 6; i++) {
-                slots.add(new Slot("Saha " + i, Collections.emptySet(), false)); // her outfield
+                slots.add(new Slot("Saha " + i, Collections.emptySet(), false));
             }
         } else {
-            // Futbol: parse "4-3-3" / "4-4-2" / ...
-            int[] lines = parseFormation(formation); // ör. [4,3,3] = [DEF, MID, FW]
+            int[] lines = parseFormation(formation);
             slots.add(new Slot("Kaleci", setOf("Goalkeeper"), true));
-            // LineupView formasyon satırlarını hücum→defans okuyor; aynı sırayla slot oluştur
-            // (lines'i sondan başa yürü)
             for (int i = lines.length - 1; i >= 0; i--) {
                 String role;
                 Set<String> pos;
@@ -151,9 +199,7 @@ public class SquadSelectorView {
         return slots;
     }
 
-    private static Set<String> setOf(String... s) {
-        return new HashSet<>(Arrays.asList(s));
-    }
+    private static Set<String> setOf(String... s) { return new HashSet<>(Arrays.asList(s)); }
 
     private static int[] parseFormation(String f) {
         try {
@@ -174,7 +220,6 @@ public class SquadSelectorView {
             if (s.isGK) {
                 if (pos.equalsIgnoreCase("GK") || pos.equalsIgnoreCase("Goalkeeper")) out.add(p);
             } else if (s.positions.isEmpty()) {
-                // outfield: GK olmayan herkes
                 if (!pos.equalsIgnoreCase("GK") && !pos.equalsIgnoreCase("Goalkeeper")) out.add(p);
             } else {
                 if (s.positions.contains(pos)) out.add(p);
@@ -203,7 +248,6 @@ public class SquadSelectorView {
             Player p = cb.getValue();
             if (p != null && chosen.add(p)) ordered.add(p);
         }
-        // Yedekler: kadroda olup seçilmeyenler
         for (Player p : new ArrayList<>(team.getPlayers())) {
             if (!chosen.contains(p)) ordered.add(p);
         }

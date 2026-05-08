@@ -5,7 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="69060621-eda5-4d55-823b-f1e33edd777b" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/JavaFXMain.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/JavaFXMain.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/LineupSelectorView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/LineupSelectorView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/LineupView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/LineupView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/SquadSelectorView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/SquadSelectorView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/SubstitutionView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/SubstitutionView.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
