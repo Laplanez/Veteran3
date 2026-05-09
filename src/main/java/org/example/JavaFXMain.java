@@ -192,6 +192,24 @@ public class JavaFXMain extends Application {
         Scene scene = new Scene(root, 1100, 700);
         stage.setScene(scene);
         stage.setTitle("⚡ Arena — Spor Simülatörü");
+        // 🆕 ESC menüsü
+        PauseMenu.install(scene, stage,
+                () -> {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("user=").append(currentUser).append('\n');
+                    sb.append("sport=").append(currentSport).append('\n');
+                    sb.append("week=").append(currentWeek).append('/').append(totalWeeks).append('\n');
+                    sb.append("myTeam=").append(myTeam == null ? "-" : myTeam.getName()).append('\n');
+                    sb.append("--- STANDINGS ---\n");
+                    for (Team t : teams) {
+                        sb.append(String.format("%-18s P=%d  GD=%d%n",
+                                t.getName(), t.getPoints(), t.getGoalDifference()));
+                    }
+                    return sb.toString();
+                },
+                this::resetAll
+        );
+
         stage.show();
     }
 

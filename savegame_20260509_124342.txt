@@ -1,0 +1,11 @@
+# Veteran3 Save  20260509_124342
+user=v
+sport=football
+week=1/3
+myTeam=Beşiktaş
+--- STANDINGS ---
+Beşiktaş           P=3  GD=1
+Galatasaray        P=1  GD=0
+Trabzonspor        P=1  GD=0
+Fenerbahçe         P=0  GD=-1
+
