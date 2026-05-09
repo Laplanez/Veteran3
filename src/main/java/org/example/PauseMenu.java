@@ -92,11 +92,13 @@ public class PauseMenu {
         btnSave.setOnAction(e -> {
             String data = saveProvider != null ? saveProvider.collectSaveData() : "";
             String stamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-            File file = new File("savegame_" + stamp + ".txt");
+            // Sabit dosya adı: bir sonraki açılışta otomatik yüklenir
+            File file = new File("savegame.txt");
             try (PrintWriter w = new PrintWriter(new FileWriter(file))) {
                 w.println("# Veteran3 Save  " + stamp);
                 w.println(data);
-                showInfo(owner, "Kaydedildi", "Oyun kaydedildi:\n" + file.getAbsolutePath());
+                showInfo(owner, "Kaydedildi",
+                        "Oyun kaydedildi.\nUygulamayı bir sonraki açışında kaldığın yerden devam edeceksin.");
             } catch (IOException ex) {
                 showInfo(owner, "Hata", "Kaydedilemedi: " + ex.getMessage());
             }
@@ -177,13 +179,6 @@ public class PauseMenu {
             lSpeed.setText("Maç Hızı: " + fmt(GameSettings.matchSpeed) + "x");
         });
 
-        // Ses
-        Label lSnd = label("Ses Efektleri", COLOR_TEXT);
-        CheckBox cbSnd = new CheckBox();
-        cbSnd.setSelected(GameSettings.soundEnabled);
-        cbSnd.selectedProperty().addListener((o, ov, nv) -> GameSettings.soundEnabled = nv);
-        styleCheck(cbSnd, COLOR_TEXT);
-
         // Otomatik log scroll
         Label lScroll = label("Logları Otomatik Kaydır", COLOR_TEXT);
         CheckBox cbScroll = new CheckBox();
@@ -202,9 +197,8 @@ public class PauseMenu {
         grid.setHgap(16); grid.setVgap(14);
         grid.add(lFs, 0, 0);     grid.add(cbFs, 1, 0);
         grid.add(lSpeed, 0, 1, 2, 1); grid.add(sSpeed, 0, 2, 2, 1);
-        grid.add(lSnd, 0, 3);    grid.add(cbSnd, 1, 3);
-        grid.add(lScroll, 0, 4); grid.add(cbScroll, 1, 4);
-        grid.add(lAnim, 0, 5);   grid.add(cbAnim, 1, 5);
+        grid.add(lScroll, 0, 3); grid.add(cbScroll, 1, 3);
+        grid.add(lAnim, 0, 4);   grid.add(cbAnim, 1, 4);
         ColumnConstraints c1 = new ColumnConstraints(); c1.setHgrow(Priority.ALWAYS);
         grid.getColumnConstraints().addAll(c1, new ColumnConstraints());
 

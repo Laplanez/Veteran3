@@ -30,11 +30,11 @@ public class LineupView {
     private static final String FIELD_OPP   = "linear-gradient(to bottom, #1e3a8a, #1e40af)";
     private static final String VS_COLOR    = "linear-gradient(to right, #ef4444, #f97316)";
 
-    public static void show(Stage owner, Team teamA, Team teamB, boolean isHandball) {
-        show(owner, teamA, teamB, isHandball, null, null);
+    public static boolean show(Stage owner, Team teamA, Team teamB, boolean isHandball) {
+        return show(owner, teamA, teamB, isHandball, null, null);
     }
 
-    public static void show(Stage owner, Team teamA, Team teamB,
+    public static boolean show(Stage owner, Team teamA, Team teamB,
                             boolean isHandball, Team myTeam, String formation) {
         Stage dialog = new Stage();
         dialog.initOwner(owner);
@@ -65,12 +65,13 @@ public class LineupView {
         HBox.setHgrow(fieldA, Priority.ALWAYS);
         HBox.setHgrow(fieldB, Priority.ALWAYS);
 
+        final boolean[] started = { false };
         Button btnStart = new Button("▶  Maça Başla");
         btnStart.setMaxWidth(Double.MAX_VALUE);
         btnStart.setStyle("-fx-font-size: 15px; -fx-padding: 12 22; -fx-background-color: " + SUCCESS + ";"
                 + " -fx-text-fill: white; -fx-font-weight: bold;"
                 + " -fx-background-radius: 12; -fx-border-radius: 12; -fx-cursor: hand;");
-        btnStart.setOnAction(e -> dialog.close());
+        btnStart.setOnAction(e -> { started[0] = true; dialog.close(); });
 
         VBox card = new VBox(15, title, subtitle, fields, btnStart);
         card.setPadding(new Insets(20));
@@ -83,6 +84,8 @@ public class LineupView {
 
         dialog.setScene(new Scene(root, 1040, 700));
         dialog.showAndWait();
+        // X ile kapatıldıysa started=false → çağıran taraf önceki ekrana döner
+        return started[0];
     }
 
     /** Takım için saha + formasyona göre dizilmiş oyuncular. */

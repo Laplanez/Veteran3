@@ -3,7 +3,6 @@ package org.example;
 public class GameSettings {
     public static boolean fullscreen = false;
     public static double matchSpeed = 1.0;   // 0.5 = yavaş, 2.0 = hızlı
-    public static boolean soundEnabled = true;
     public static boolean autoScrollLogs = true;
     public static boolean showGoalAnimations = true;
 

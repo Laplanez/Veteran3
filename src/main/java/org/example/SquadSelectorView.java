@@ -158,10 +158,7 @@ public class SquadSelectorView {
         dialog.setScene(new Scene(root, 520, 640));
         dialog.showAndWait();
 
-        if (!ok[0]) {
-            autoFill(boxes, slots, myTeam);
-            applySquad(myTeam, boxes);
-        }
+        // X ile kapatıldıysa ok=false → çağıran taraf önceki ekrana dönmek için kullanır
         return ok[0];
     }
 

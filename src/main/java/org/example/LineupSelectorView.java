@@ -70,13 +70,14 @@ public class LineupSelectorView {
                         + "-fx-background-radius: 12; -fx-border-radius: 12;"
                         + "-fx-border-color: " + BORDER + "; -fx-border-width: 1;");
 
-        final String[] result = {(String) formations.get(0)};
+        final String[] result = { null };
         Button confirm = new Button("✅  Onayla ve Maça Başla");
         confirm.setMaxWidth(Double.MAX_VALUE);
         confirm.setStyle(buttonStyle(SUCCESS));
         confirm.setOnAction(e -> {
             Toggle t = group.getSelectedToggle();
             if (t != null) result[0] = t.getUserData().toString();
+            else result[0] = (String) formations.get(0);
             dialog.close();
         });
 
@@ -94,6 +95,8 @@ public class LineupSelectorView {
         root.setPadding(new Insets(18));
         root.setStyle("-fx-background-color: linear-gradient(to bottom right, " + BG + ", " + BG2 + ");");
 
+        // Sağ üstteki çarpı (X) → önceki ekrana dönmeyi belirtmek için null döndür
+        // (result[0] yalnızca Onay butonu ile dolar)
         dialog.setScene(new Scene(root, 460, 620));
         dialog.showAndWait();
         return result[0];

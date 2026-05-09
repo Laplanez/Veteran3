@@ -51,11 +51,49 @@ public class JavaFXMain extends Application {
     @Override
     public void start(Stage stage) {
         this.primaryStage = stage;
+        // Kayıtlı oyun varsa giriş ekranını atla, doğrudan kaldığı yerden devam et
+        File saveFile = new File("savegame.txt");
+        if (saveFile.exists() && tryLoadAndResume(saveFile)) {
+            return;
+        }
         // Önce giriş ekranı, başarılı olunca ana ekranı kur
         LoginView.show(stage, username -> {
             this.currentUser = username;
             startMainApp(stage);
         });
+    }
+
+    /** savegame.txt dosyasını okuyup oyunu kaldığı yerden başlatır. */
+    private boolean tryLoadAndResume(File f) {
+        try {
+            Map<String,String> kv = new LinkedHashMap<>();
+            List<String[]> teamRows = new ArrayList<>();
+            for (String line : Files.readAllLines(f.toPath())) {
+                String t = line.trim();
+                if (t.isEmpty() || t.startsWith("#")) continue;
+                if (t.startsWith("TEAM:")) {
+                    teamRows.add(t.substring(5).split("\\|", -1));
+                } else {
+                    int idx = t.indexOf('=');
+                    if (idx > 0) kv.put(t.substring(0, idx).trim(), t.substring(idx + 1).trim());
+                }
+            }
+            if (teamRows.isEmpty() || !kv.containsKey("sport")) return false;
+
+            this.currentUser = kv.getOrDefault("user", "Misafir");
+            this.currentSport = kv.getOrDefault("sport", "football");
+            this.isHandball = "handball".equalsIgnoreCase(this.currentSport);
+            int week = 0;
+            try { week = Integer.parseInt(kv.getOrDefault("week", "0")); } catch (Exception ignore) {}
+            String myTeamName = kv.getOrDefault("myTeam", "");
+
+            startMainApp(primaryStage);
+            restoreSeason(teamRows, myTeamName, week);
+            return true;
+        } catch (Exception e) {
+            System.err.println("⚠ Kayıt yüklenemedi: " + e.getMessage());
+            return false;
+        }
     }
 
     private void startMainApp(Stage stage) {
@@ -196,14 +234,20 @@ public class JavaFXMain extends Application {
         PauseMenu.install(scene, stage,
                 () -> {
                     StringBuilder sb = new StringBuilder();
-                    sb.append("user=").append(currentUser).append('\n');
-                    sb.append("sport=").append(currentSport).append('\n');
-                    sb.append("week=").append(currentWeek).append('/').append(totalWeeks).append('\n');
+                    sb.append("user=").append(currentUser == null ? "Misafir" : currentUser).append('\n');
+                    sb.append("sport=").append(currentSport == null ? "football" : currentSport).append('\n');
+                    sb.append("week=").append(currentWeek).append('\n');
+                    sb.append("totalWeeks=").append(totalWeeks).append('\n');
                     sb.append("myTeam=").append(myTeam == null ? "-" : myTeam.getName()).append('\n');
-                    sb.append("--- STANDINGS ---\n");
                     for (Team t : teams) {
-                        sb.append(String.format("%-18s P=%d  GD=%d%n",
-                                t.getName(), t.getPoints(), t.getGoalDifference()));
+                        int gd = t.getGoalDifference();
+                        // gf-ga = gd; basit yaklaşım: pozitifse gf=gd,ga=0; negatifse gf=0,ga=-gd
+                        int gf = Math.max(0, gd);
+                        int ga = Math.max(0, -gd);
+                        sb.append("TEAM:").append(t.getName())
+                          .append('|').append(t.getPoints())
+                          .append('|').append(gf)
+                          .append('|').append(ga).append('\n');
                     }
                     return sb.toString();
                 },
@@ -418,7 +462,6 @@ public class JavaFXMain extends Application {
     private void playNextWeek() {
         if (currentWeek >= totalWeeks) return;
         List<Match> weekMatches = weeklySchedule.get(currentWeek);
-        currentWeek++;
 
         Match myMatch = null;
         List<Match> otherMatches = new ArrayList<>();
@@ -427,6 +470,19 @@ public class JavaFXMain extends Application {
             else otherMatches.add(m);
         }
 
+        // 🆕 Maç hazırlığı (diziliş + ilk 11 + maç öncesi diziliş ekranı) HAFTA OYNANMADAN ÖNCE.
+        // Kullanıcı çarpıya basıp geri dönerse hafta hiç oynanmaz.
+        String formation = null;
+        if (myMatch != null) {
+            formation = doMatchPrep(myMatch);
+            if (formation == null) {
+                logs.getItems().add("↩  Maç hazırlığı iptal edildi — hafta oynanmadı.");
+                logs.scrollTo(logs.getItems().size() - 1);
+                return;
+            }
+        }
+
+        currentWeek++;
         int winPoints = isHandball ? 2 : 3;
         String emoji = isHandball ? "🤾" : "⚽";
 
@@ -445,6 +501,9 @@ public class JavaFXMain extends Application {
             logs.getItems().add("");
             logs.getItems().add("🔴 SENİN MAÇIN: " + myMatch.getTeamA().getName() + " vs " + myMatch.getTeamB().getName());
             logs.getItems().add("─────────────────────────");
+            logs.getItems().add("   📋 " + myTeam.getName() + " dizilişi: " + formation);
+            logs.getItems().add("   👥 İlk " + (isHandball ? 7 : 11) + " onaylandı.");
+            logs.scrollTo(logs.getItems().size() - 1);
             if (isHandball) playMyHandballMatchLive(myMatch, winPoints);
             else playMyFootballMatchLive(myMatch, winPoints);
         } else {
@@ -455,22 +514,38 @@ public class JavaFXMain extends Application {
         }
     }
 
+    /**
+     * Maç öncesi hazırlık akışı: Diziliş → İlk Kadro → Maç Öncesi Diziliş.
+     * Her ekrandaki sağ üst çarpıya basıldığında bir önceki ekrana dönülür.
+     * En baştaki "Diziliş Seç" ekranında çarpıya basılırsa null döner (iptal).
+     */
+    private String doMatchPrep(Match m) {
+        String formation = null;
+        int step = 0;
+        while (step < 3) {
+            if (step == 0) {
+                formation = LineupSelectorView.show(primaryStage, myTeam, isHandball);
+                if (formation == null) return null; // iptal: önceki ekran (lig ana ekranı)
+                step = 1;
+            } else if (step == 1) {
+                boolean ok = SquadSelectorView.show(primaryStage, myTeam, formation, isHandball);
+                if (!ok) { step = 0; continue; } // geri: diziliş seç
+                step = 2;
+            } else {
+                boolean started = LineupView.show(primaryStage, m.getTeamA(), m.getTeamB(),
+                        isHandball, myTeam, formation);
+                if (!started) { step = 1; continue; } // geri: ilk kadro
+                step = 3;
+            }
+        }
+        return formation;
+    }
+
     // ==================== FUTBOL: CANLI + TAKTİK ====================
     private void playMyFootballMatchLive(Match m, int winPoints) {
         btnNextWeek.setDisable(true);
         btnReset.setDisable(true);
-
-        // Önce diziliş seç
-        String formation = LineupSelectorView.show(primaryStage, myTeam, false);
-        logs.getItems().add("   📋 " + myTeam.getName() + " dizilişi: " + formation);
-
-        // 🆕 İlk 11'i pozisyonuna göre seç
-        SquadSelectorView.show(primaryStage, myTeam, formation, false);
-        logs.getItems().add("   👥 İlk 11 onaylandı.");
-        logs.scrollTo(logs.getItems().size() - 1);
-
-        // Sonra sahadaki oyuncuları göster
-        LineupView.show(primaryStage, m.getTeamA(), m.getTeamB(), false, myTeam, formation);
+        // Maç öncesi hazırlık (diziliş + ilk 11 + saha) playNextWeek() içinde yapıldı.
 
         new Thread(() -> {
             Random random = new Random();
@@ -553,18 +628,7 @@ public class JavaFXMain extends Application {
     private void playMyHandballMatchLive(Match m, int winPoints) {
         btnNextWeek.setDisable(true);
         btnReset.setDisable(true);
-
-        // Önce diziliş seç
-        String formation = LineupSelectorView.show(primaryStage, myTeam, true);
-        logs.getItems().add("   📋 " + myTeam.getName() + " dizilişi: " + formation);
-
-        // 🆕 İlk 7'yi pozisyonuna göre seç
-        SquadSelectorView.show(primaryStage, myTeam, formation, true);
-        logs.getItems().add("   👥 İlk 7 onaylandı.");
-        logs.scrollTo(logs.getItems().size() - 1);
-
-        // Sonra sahadaki oyuncuları göster
-        LineupView.show(primaryStage, m.getTeamA(), m.getTeamB(), true, myTeam, formation);
+        // Maç öncesi hazırlık (diziliş + ilk 7 + saha) playNextWeek() içinde yapıldı.
 
         new Thread(() -> {
             Random random = new Random();
@@ -831,6 +895,65 @@ public class JavaFXMain extends Application {
         lblSelectTeam.setVisible(false);
         tacticPanel.setVisible(false);
         tacticPanel.setManaged(false);
+        // Yeni sezona başlanırken kayıt dosyasını da temizle
+        try { new File("savegame.txt").delete(); } catch (Exception ignored) {}
+    }
+
+    /** Kayıttan sezonu yeniden kurar: takımlar, fikstür, puan durumu ve hafta. */
+    private void restoreSeason(List<String[]> teamRows, String myTeamName, int week) {
+        loadNameFiles();
+        Set<String> usedNames = new HashSet<>();
+        teams.clear();
+        weeklySchedule.clear();
+        logs.getItems().clear();
+
+        for (String[] r : teamRows) {
+            if (r.length < 1) continue;
+            Team t = new Team(r[0]);
+            if (isHandball) initHandballPlayers(t, usedNames);
+            else initFootballPlayers(t, usedNames);
+            try {
+                if (r.length >= 2) t.addPoints(Integer.parseInt(r[1]));
+                int gf = r.length >= 3 ? Integer.parseInt(r[2]) : 0;
+                int ga = r.length >= 4 ? Integer.parseInt(r[3]) : 0;
+                if (gf != 0 || ga != 0) t.recordMatch(gf, ga);
+            } catch (Exception ignore) {}
+            teams.add(t);
+        }
+
+        myTeam = teams.stream().filter(t -> t.getName().equals(myTeamName))
+                .findFirst().orElse(teams.isEmpty() ? null : teams.get(0));
+
+        generateWeeklyFixture();
+        totalWeeks = weeklySchedule.size();
+        currentWeek = Math.min(Math.max(0, week), totalWeeks);
+
+        String sportName = isHandball ? "HENTBOL" : "FUTBOL";
+        logs.getItems().add("💾 Kayıtlı oyun yüklendi — " + sportName + " ligi.");
+        logs.getItems().add("   Takımın: " + (myTeam == null ? "-" : myTeam.getName())
+                + "  |  Hafta: " + currentWeek + "/" + totalWeeks);
+        logs.getItems().add("▶ 'Sonraki Hafta' ile devam edebilirsin.");
+
+        table.setItems(FXCollections.observableArrayList(teams));
+        refreshStandings();
+
+        // UI durumunu, sezon devam ediyormuş gibi ayarla
+        btnFootball.setDisable(true);
+        btnHandball.setDisable(true);
+        teamSelector.setVisible(false);
+        lblSelectTeam.setVisible(false);
+        btnNextWeek.setVisible(true);
+        btnNextWeek.setDisable(currentWeek >= totalWeeks);
+        if (currentWeek >= totalWeeks) btnNextWeek.setText("✅ Lig Tamamlandı");
+        btnReset.setVisible(true);
+        btnReset.setDisable(false);
+
+        if (currentWeek >= totalWeeks) {
+            lblWeek.setText("LİG BİTTİ — Şampiyon: " + teams.get(0).getName());
+        } else {
+            lblWeek.setText(sportName + " LİGİ — Hafta " + currentWeek + "/" + totalWeeks
+                    + " | Takımın: " + (myTeam == null ? "-" : myTeam.getName()));
+        }
     }
 
     // ==================== OYUNCU OLUŞTUR ====================
