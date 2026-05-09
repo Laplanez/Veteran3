@@ -4,6 +4,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
@@ -18,7 +19,6 @@ import java.util.List;
 public class PauseMenu {
 
     public interface SaveProvider {
-        /** Kaydedilecek oyun durumunu metin olarak döner. */
         String collectSaveData();
     }
 
@@ -28,10 +28,13 @@ public class PauseMenu {
 
     private static Stage activeStage = null;
 
-    /** Sahnedeki ESC tuşuna menüyü bağlar. Sahne her değiştiğinde bir kez çağır. */
     public static void install(Scene scene, Stage owner,
                                SaveProvider saveProvider,
                                MainMenuAction mainMenuAction) {
+        if (owner != null) {
+            owner.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
+            owner.setFullScreenExitHint("");
+        }
         scene.setOnKeyPressed(ev -> {
             if (ev.getCode().toString().equals("ESCAPE")) {
                 if (activeStage != null && activeStage.isShowing()) {
@@ -40,16 +43,14 @@ public class PauseMenu {
                 } else {
                     show(owner, saveProvider, mainMenuAction);
                 }
+                ev.consume();
             }
         });
     }
 
     public static void show(Stage owner, SaveProvider saveProvider, MainMenuAction mainMenuAction) {
-        // Tema renkleri (JavaFXMain ile aynı palette)
-        final String COLOR_BG      = "#0f1623";
         final String COLOR_PANEL   = "#1a2332";
         final String COLOR_PANEL_2 = "#222e42";
-        final String COLOR_TEXT    = "#e6edf7";
         final String COLOR_MUTED   = "#8aa0bd";
         final String COLOR_ACCENT  = "#22d3ee";
         final String COLOR_PRIMARY = "linear-gradient(to right, #2563eb, #22d3ee)";
@@ -92,13 +93,11 @@ public class PauseMenu {
         btnSave.setOnAction(e -> {
             String data = saveProvider != null ? saveProvider.collectSaveData() : "";
             String stamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-            // Sabit dosya adı: bir sonraki açılışta otomatik yüklenir
             File file = new File("savegame.txt");
             try (PrintWriter w = new PrintWriter(new FileWriter(file))) {
                 w.println("# Veteran3 Save  " + stamp);
                 w.println(data);
-                showInfo(owner, "Kaydedildi",
-                        "Oyun kaydedildi.\nUygulamayı bir sonraki açışında kaldığın yerden devam edeceksin.");
+                showInfo(owner, "Kaydedildi", "Oyun kaydedildi.");
             } catch (IOException ex) {
                 showInfo(owner, "Hata", "Kaydedilemedi: " + ex.getMessage());
             }
@@ -124,8 +123,7 @@ public class PauseMenu {
         box.setPadding(new Insets(28, 36, 28, 36));
         box.setStyle("-fx-background-color: linear-gradient(to bottom, " + COLOR_PANEL + ", " + COLOR_PANEL_2 + ");"
                 + " -fx-background-radius: 18; -fx-border-radius: 18;"
-                + " -fx-border-color: " + COLOR_ACCENT + "; -fx-border-width: 2;"
-                + " -fx-effect: dropshadow(gaussian, rgba(34,211,238,0.35), 24, 0.3, 0, 6);");
+                + " -fx-border-color: " + COLOR_ACCENT + "; -fx-border-width: 2;");
 
         StackPane root = new StackPane(box);
         root.setStyle("-fx-background-color: rgba(8,12,22,0.78);");
@@ -140,11 +138,9 @@ public class PauseMenu {
             }
         });
         dialog.setScene(s);
-        dialog.setOnHidden(ev -> { if (activeStage == dialog) activeStage = null; });
         dialog.showAndWait();
     }
 
-    // ==================== AYARLAR ====================
     private static void showSettings(Stage owner) {
         final String COLOR_PANEL   = "#1a2332";
         final String COLOR_PANEL_2 = "#222e42";
@@ -153,13 +149,15 @@ public class PauseMenu {
         final String COLOR_PRIMARY = "linear-gradient(to right, #2563eb, #22d3ee)";
 
         Stage dialog = new Stage(StageStyle.TRANSPARENT);
-        dialog.initOwner(owner);
+
+        // KRİTİK DÜZELTME: Owner olarak direkt ana stage yerine mevcut duraklatma stage'ini veriyoruz
+        dialog.initOwner(activeStage);
+
         dialog.initModality(Modality.APPLICATION_MODAL);
 
         Label title = new Label("⚙  Ayarlar");
         title.setStyle("-fx-font-size: 22px; -fx-font-weight: 900; -fx-text-fill: " + COLOR_ACCENT + ";");
 
-        // Tam ekran
         Label lFs = label("Tam Ekran", COLOR_TEXT);
         CheckBox cbFs = new CheckBox();
         cbFs.setSelected(GameSettings.fullscreen || (owner != null && owner.isFullScreen()));
@@ -167,31 +165,23 @@ public class PauseMenu {
             GameSettings.fullscreen = nv;
             if (owner != null) owner.setFullScreen(nv);
         });
-        styleCheck(cbFs, COLOR_TEXT);
 
-        // Maç hızı
         Label lSpeed = label("Maç Hızı: " + fmt(GameSettings.matchSpeed) + "x", COLOR_TEXT);
         Slider sSpeed = new Slider(0.5, 3.0, GameSettings.matchSpeed);
-        sSpeed.setMajorTickUnit(0.5);
-        sSpeed.setBlockIncrement(0.25);
         sSpeed.valueProperty().addListener((o, ov, nv) -> {
             GameSettings.matchSpeed = nv.doubleValue();
             lSpeed.setText("Maç Hızı: " + fmt(GameSettings.matchSpeed) + "x");
         });
 
-        // Otomatik log scroll
         Label lScroll = label("Logları Otomatik Kaydır", COLOR_TEXT);
         CheckBox cbScroll = new CheckBox();
         cbScroll.setSelected(GameSettings.autoScrollLogs);
         cbScroll.selectedProperty().addListener((o, ov, nv) -> GameSettings.autoScrollLogs = nv);
-        styleCheck(cbScroll, COLOR_TEXT);
 
-        // Gol animasyonları
         Label lAnim = label("Gol Vurgusu", COLOR_TEXT);
         CheckBox cbAnim = new CheckBox();
         cbAnim.setSelected(GameSettings.showGoalAnimations);
         cbAnim.selectedProperty().addListener((o, ov, nv) -> GameSettings.showGoalAnimations = nv);
-        styleCheck(cbAnim, COLOR_TEXT);
 
         GridPane grid = new GridPane();
         grid.setHgap(16); grid.setVgap(14);
@@ -199,8 +189,6 @@ public class PauseMenu {
         grid.add(lSpeed, 0, 1, 2, 1); grid.add(sSpeed, 0, 2, 2, 1);
         grid.add(lScroll, 0, 3); grid.add(cbScroll, 1, 3);
         grid.add(lAnim, 0, 4);   grid.add(cbAnim, 1, 4);
-        ColumnConstraints c1 = new ColumnConstraints(); c1.setHgrow(Priority.ALWAYS);
-        grid.getColumnConstraints().addAll(c1, new ColumnConstraints());
 
         Button btnClose = new Button("✓  Tamam");
         btnClose.setMaxWidth(Double.MAX_VALUE);
@@ -210,7 +198,6 @@ public class PauseMenu {
         btnClose.setOnAction(e -> dialog.close());
 
         VBox box = new VBox(16, title, new Separator(), grid, btnClose);
-        box.setAlignment(Pos.TOP_LEFT);
         box.setPadding(new Insets(24, 28, 24, 28));
         box.setStyle("-fx-background-color: linear-gradient(to bottom, " + COLOR_PANEL + ", " + COLOR_PANEL_2 + ");"
                 + " -fx-background-radius: 16; -fx-border-radius: 16;"
@@ -231,10 +218,6 @@ public class PauseMenu {
         Label l = new Label(text);
         l.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: " + color + ";");
         return l;
-    }
-
-    private static void styleCheck(CheckBox cb, String color) {
-        cb.setStyle("-fx-text-fill: " + color + ";");
     }
 
     private static String fmt(double v) {
