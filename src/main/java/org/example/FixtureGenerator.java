@@ -16,6 +16,7 @@ class FixtureGenerator {
         int rounds = numTeams - 1;
         int halfSize = numTeams / 2;
 
+        // İlk devre
         for (int round = 0; round < rounds; round++) {
             for (int i = 0; i < halfSize; i++) {
                 Team a = pool.get(i);
@@ -24,6 +25,12 @@ class FixtureGenerator {
             }
             Team last = pool.remove(numTeams - 1);
             pool.add(1, last);
+        }
+        // İkinci devre (rövanş - ev/deplasman ters)
+        int firstLegSize = schedule.size();
+        for (int idx = 0; idx < firstLegSize; idx++) {
+            Match m = schedule.get(idx);
+            schedule.add(new FootballMatch(m.getTeamB(), m.getTeamA(), engine));
         }
         return schedule;
     }

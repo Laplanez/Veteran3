@@ -454,6 +454,7 @@ public class JavaFXMain extends Application {
         int halfSize = n / 2;
         MatchEngine footballEngine = isHandball ? null : new FootballEngine();
 
+        // İlk yarı (ilk devre)
         for (int round = 0; round < rounds; round++) {
             List<Match> weekMatches = new ArrayList<>();
             for (int i = 0; i < halfSize; i++) {
@@ -465,6 +466,19 @@ public class JavaFXMain extends Application {
             weeklySchedule.add(weekMatches);
             Team last = pool.remove(n - 1);
             pool.add(1, last);
+        }
+        // İkinci yarı (rövanş) - ev/deplasman ters çevrilir, her takım birbiriyle 2 maç oynar
+        int firstHalfWeeks = weeklySchedule.size();
+        for (int w = 0; w < firstHalfWeeks; w++) {
+            List<Match> firstLeg = weeklySchedule.get(w);
+            List<Match> secondLeg = new ArrayList<>();
+            for (Match m : firstLeg) {
+                Team a = m.getTeamA();
+                Team b = m.getTeamB();
+                if (isHandball) secondLeg.add(new HandballMatch(b, a, new HandballEngine()));
+                else secondLeg.add(new FootballMatch(b, a, footballEngine));
+            }
+            weeklySchedule.add(secondLeg);
         }
     }
 
