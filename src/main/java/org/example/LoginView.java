@@ -101,8 +101,40 @@ public class LoginView {
         StackPane.setMargin(card, new Insets(20));
         root.getChildren().add(card);
 
+        // ---- Sol alt: Developers paneli ----
+        VBox devBox = new VBox(4);
+        devBox.setAlignment(Pos.CENTER_LEFT);
+        devBox.setPadding(new Insets(12, 16, 12, 16));
+        devBox.setMaxWidth(Region.USE_PREF_SIZE);
+        devBox.setMaxHeight(Region.USE_PREF_SIZE);
+        devBox.setStyle(
+                "-fx-background-color: rgba(0,0,0,0.45);" +
+                        "-fx-background-radius: 12;" +
+                        "-fx-border-color: rgba(255,255,255,0.18);" +
+                        "-fx-border-radius: 12;" +
+                        "-fx-border-width: 1;"
+        );
+        devBox.setEffect(new DropShadow(12, Color.rgb(0, 0, 0, 0.55)));
+
+        Label devTitle = new Label("👨‍💻 Developers");
+        devTitle.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #22d3ee;");
+
+        Label dev1 = new Label("• Ahmet Emre Yağcı");
+        Label dev2 = new Label("• Efe Berk Dağlı");
+        Label dev3 = new Label("• Umut Ege Taner");
+        String devStyle = "-fx-font-size: 12px; -fx-text-fill: #e6edf7;";
+        dev1.setStyle(devStyle);
+        dev2.setStyle(devStyle);
+        dev3.setStyle(devStyle);
+
+        devBox.getChildren().addAll(devTitle, dev1, dev2, dev3);
+
+        StackPane.setAlignment(devBox, Pos.BOTTOM_LEFT);
+        StackPane.setMargin(devBox, new Insets(0, 0, 18, 18));
+        root.getChildren().add(devBox);
+
         Scene scene = new Scene(root, 1050, 650);
-        stage.setTitle("Spor Simülatörü — Giriş");
+        stage.setTitle("Veteran3 Spor Simülatörü — Giriş");
         stage.setScene(scene);
         stage.show();
     }
