@@ -386,8 +386,18 @@ public class JavaFXMain extends Application {
         currentSport = sport;
         isHandball = sport.equals("handball");
         List<String> teamNames = isHandball
-                ? List.of("Alpha HC","Beta United","Gamma SK","Delta Club")
-                : List.of("Galatasaray","Fenerbahçe","Beşiktaş","Trabzonspor");
+                ? List.of(
+                "Alpha HC", "Beta United", "Gamma SK", "Delta Club",
+                "Epsilon HT", "Zeta Storm", "Eta Falcons", "Theta Wolves",
+                "Iota Lions", "Kappa Sharks", "Lambda Bears", "Mu Eagles",
+                "Nu Tigers", "Xi Hawks", "Omicron Vipers", "Pi Panthers",
+                "Rho Dragons", "Sigma Titans")
+                : List.of(
+                "Galatasaray", "Fenerbahçe", "Beşiktaş", "Trabzonspor",
+                "Başakşehir", "Adana Demirspor", "Konyaspor", "Antalyaspor",
+                "Sivasspor", "Kayserispor", "Alanyaspor", "Gaziantep FK",
+                "Hatayspor", "Kasımpaşa", "Rizespor", "Samsunspor",
+                "Ankaragücü", "Pendikspor");
         teamSelector.setItems(FXCollections.observableArrayList(teamNames));
         teamSelector.setValue(null);
         teamSelector.setPromptText("Takım seç...");
@@ -412,12 +422,24 @@ public class JavaFXMain extends Application {
         Set<String> usedNames = new HashSet<>();
 
         if (isHandball) {
-            teams.addAll(List.of(new Team("Alpha HC"), new Team("Beta United"),
-                    new Team("Gamma SK"), new Team("Delta Club")));
+            String[] hbNames = {
+                    "Alpha HC", "Beta United", "Gamma SK", "Delta Club",
+                    "Epsilon HT", "Zeta Storm", "Eta Falcons", "Theta Wolves",
+                    "Iota Lions", "Kappa Sharks", "Lambda Bears", "Mu Eagles",
+                    "Nu Tigers", "Xi Hawks", "Omicron Vipers", "Pi Panthers",
+                    "Rho Dragons", "Sigma Titans"
+            };
+            for (String n : hbNames) teams.add(new Team(n));
             for (Team t : teams) initHandballPlayers(t, usedNames);
         } else {
-            teams.addAll(List.of(new Team("Galatasaray"), new Team("Fenerbahçe"),
-                    new Team("Beşiktaş"), new Team("Trabzonspor")));
+            String[] fbNames = {
+                    "Galatasaray", "Fenerbahçe", "Beşiktaş", "Trabzonspor",
+                    "Başakşehir", "Adana Demirspor", "Konyaspor", "Antalyaspor",
+                    "Sivasspor", "Kayserispor", "Alanyaspor", "Gaziantep FK",
+                    "Hatayspor", "Kasımpaşa", "Rizespor", "Samsunspor",
+                    "Ankaragücü", "Pendikspor"
+            };
+            for (String n : fbNames) teams.add(new Team(n));
             for (Team t : teams) initFootballPlayers(t, usedNames);
         }
 
@@ -992,6 +1014,7 @@ public class JavaFXMain extends Application {
 
     // ==================== OYUNCU OLUŞTUR ====================
     // 🆕 18 oyuncu: 2 GK + 6 DEF + 6 MID + 4 FW (yedekleri pozisyona göre seçebilmek için)
+    // Futbol için takımlara göre GERÇEK oyuncu isimleri kullanılır.
     private void initFootballPlayers(Team t, Set<String> usedNames) {
         String[] positions = {
                 "Goalkeeper","Goalkeeper",
@@ -999,15 +1022,140 @@ public class JavaFXMain extends Application {
                 "Midfielder","Midfielder","Midfielder","Midfielder","Midfielder","Midfielder",
                 "Forward","Forward","Forward","Forward"
         };
+        String[] roster = REAL_FOOTBALL_ROSTERS.get(t.getName());
         for (int i = 0; i < positions.length; i++) {
-            String playerName = randomFullName(usedNames);
+            String playerName;
+            if (roster != null && i < roster.length) {
+                playerName = roster[i];
+                usedNames.add(playerName);
+            } else {
+                playerName = randomFullName(usedNames);
+            }
             FootballPlayer p = new FootballPlayer(playerName, i + 1, positions[i]);
-            p.setAttribute("Shooting", 50 + (int)(Math.random() * 25));
-            p.setAttribute("Speed", 50 + (int)(Math.random() * 25));
-            p.setAttribute("Passing", 50 + (int)(Math.random() * 25));
+            // Gerçek oyuncularda hafif yetenek artışı
+            int bonus = (roster != null) ? 5 : 0;
+            p.setAttribute("Shooting", 50 + bonus + (int)(Math.random() * 25));
+            p.setAttribute("Speed", 50 + bonus + (int)(Math.random() * 25));
+            p.setAttribute("Passing", 50 + bonus + (int)(Math.random() * 25));
             p.setAttribute("Goalkeeping", positions[i].equals("Goalkeeper") ? 70 + (int)(Math.random() * 20) : 30);
             t.addPlayer(p);
         }
+    }
+
+    /** Süper Lig takımlarına göre gerçek oyuncu kadroları (sıra: 2 GK, 6 DEF, 6 MID, 4 FW). */
+    private static final Map<String, String[]> REAL_FOOTBALL_ROSTERS = createRealFootballRosters();
+
+    private static Map<String, String[]> createRealFootballRosters() {
+        Map<String, String[]> m = new HashMap<>();
+        m.put("Galatasaray", new String[]{
+                "Fernando Muslera", "Günay Güvenç",
+                "Davinson Sánchez", "Abdülkerim Bardakcı", "Kaan Ayhan", "Sacha Boey", "Angeliño", "Victor Nelsson",
+                "Lucas Torreira", "Kerem Demirbay", "Hakim Ziyech", "Kerem Aktürkoğlu", "Yunus Akgün", "Tetê",
+                "Mauro Icardi", "Mertens", "Wilfried Zaha", "Bakambu"
+        });
+        m.put("Fenerbahçe", new String[]{
+                "Dominik Livaković", "İrfan Can Eğribayat",
+                "Bright Osayi-Samuel", "Alexander Djiku", "Rodrigo Becão", "Ferdi Kadıoğlu", "Jayden Oosterwolde", "Mert Müldür",
+                "Fred", "İsmail Yüksek", "İrfan Can Kahveci", "Sebastian Szymański", "Cengiz Ünder", "Dušan Tadić",
+                "Edin Džeko", "Michy Batshuayi", "Ryan Kent", "Joshua King"
+        });
+        m.put("Beşiktaş", new String[]{
+                "Mert Günok", "Ersin Destanoğlu",
+                "Omar Colley", "Daniel Amartey", "Onur Bulut", "Arthur Masuaku", "Valentin Rosier", "Eric Bailly",
+                "Gedson Fernandes", "Salih Uçan", "Rachid Ghezzal", "Alex Oxlade-Chamberlain", "Al-Musrati", "Ernest Muçi",
+                "Cenk Tosun", "Vincent Aboubakar", "Semih Kılıçsoy", "Jackson Muleka"
+        });
+        m.put("Trabzonspor", new String[]{
+                "Uğurcan Çakır", "Erce Kardeşler",
+                "Stefan Savić", "Joaquín Pereyra", "Hüseyin Türkmen", "Eren Elmalı", "Rayyan Baniya", "Mehmet Can Aydın",
+                "Anastasios Bakasetas", "Berat Özdemir", "Edin Višća", "Trezeguet", "Mahmoud Trezeguet", "Mislav Oršić",
+                "Paul Onuachu", "Enis Bardhi", "Nicolás Pepé", "Umut Bozok"
+        });
+        m.put("Başakşehir", new String[]{
+                "Volkan Babacan", "Mert Günok",
+                "Leo Duarte", "Onur Bulut", "Hasan Ali Kaldırım", "Ahmed Touba", "Christopher Operi", "Serdar Aziz",
+                "Berkay Özcan", "Mahmut Tekdemir", "Olivier Kemen", "Lucas Biglia", "Edin Višća", "Krzysztof Piątek",
+                "Deniz Türüç", "Davie Selke", "Stefano Okaka", "Eldor Shomurodov"
+        });
+        m.put("Adana Demirspor", new String[]{
+                "Yassine Bounou", "Volkan Babacan",
+                "Jonas Svensson", "Çağlar Söyüncü", "Semih Güler", "Gökhan Inler", "Adil Demirbağ", "Kerem Kayaarası",
+                "Mario Balotelli", "Ndiaye", "Yusuf Sarı", "Younès Belhanda", "Henry Onyekuru", "Mounir Chouiar",
+                "Mario Balotelli", "Jonas", "Akintola", "Ben"
+        });
+        m.put("Konyaspor", new String[]{
+                "Bahadır Güngördü", "Eray Cömert",
+                "Calusic", "Ahmet Çalık", "Soner Dikmen", "Endri Çekiçi", "Adil Demirbağ", "Uğur Demirok",
+                "Amir Hadziahmetović", "Sokol Cikalleshi", "Marin Jakoliš", "Alper Uludağ", "Bjarnason", "Endri",
+                "Sokol Cikalleshi", "Mame Diouf", "Konyalı Forvet", "Genç Onuachu"
+        });
+        m.put("Antalyaspor", new String[]{
+                "Ferhat Kaplan", "Helton Leite",
+                "Veysel Sarı", "Bünyamin Balcı", "Naldo", "Hakan Özmert", "Sangaré", "Eren Aydın",
+                "Sam Adekugbe", "Doğukan Sinik", "Lukas Podolski", "Fredy", "Soner Dikmen", "Nasri",
+                "Lukas Podolski", "Sangaré", "Haji Wright", "Bünyamin"
+        });
+        m.put("Sivasspor", new String[]{
+                "Ali Şaşal Vural", "Sehić",
+                "Goutas", "Appindangoye", "Hakan Arslan", "Ziya Erdal", "Caner Osmanpaşa", "Uğur Çiftçi",
+                "Mert Hakan Yandaş", "Hakan Arslan", "Dia Saba", "Erdoğan Yeşilyurt", "Yatabaré", "Olivier Kemen",
+                "Max Gradel", "Mustapha Yatabaré", "Rey Manaj", "Dia Saba"
+        });
+        m.put("Kayserispor", new String[]{
+                "Bilal Bayazıt", "Doğan Alemdar",
+                "Stéphane Sessègnon", "Bernard Mensah", "Joseph Attamah", "Hasan Hüseyin Acar", "Aaron Appindangoye", "Carlos Mané",
+                "Mensah", "Maxim", "Onur Bulut", "Talisca", "Pedro Henrique", "Cardoso",
+                "Mames Bahadır", "Mensah", "Carlos Eduardo", "Pedro Henrique"
+        });
+        m.put("Alanyaspor", new String[]{
+                "Ertuğrul Taşkıran", "Marafona",
+                "Fatih Aksoy", "Saliou Ciss", "Florent Hadergjonaj", "Salih Uçan", "Ümit Akdağ", "Babacar Khouma",
+                "Yusuf Özdemir", "Efecan Karaca", "Berkan Kutlu", "Ümit Akdağ", "Berkan Emir", "Ahmed Hassan",
+                "Alfredo Morelos", "Davidson", "Khouma Babacar", "Hwang Ui-jo"
+        });
+        m.put("Gaziantep FK", new String[]{
+                "Günay Güvenç", "Zafer Görgen",
+                "Toni Datković", "Souleymane Diarra", "Papy Djilobodji", "Kana-Biyik", "Samet Akaydın", "Talbi",
+                "Furkan Soyalp", "Maxim", "Tayyip Talha Sanuç", "Salem M'Bakata", "Sorescu", "Kenan Özer",
+                "Junior Morais", "Mbaye Diagne", "Boldrin", "Sefa Yılmaz"
+        });
+        m.put("Hatayspor", new String[]{
+                "Munir Mohamedi", "Erce Kardeşler",
+                "Dijksteel", "Kana-Biyik", "Strandberg", "Saint-Maximin", "Ben Rienstra", "Burak Öksüz",
+                "Aaron Boupendza", "Rúben Ribeiro", "Strandberg", "Doumbia", "Ümit Kurt", "Mame Thiam",
+                "Mame Thiam", "Boupendza", "Junior Sambia", "Ben Rienstra"
+        });
+        m.put("Kasımpaşa", new String[]{
+                "Eduard Stăncioiu", "Erhan Erentürk",
+                "Adem Büyük", "Onur Atasayar", "Aytaç Kara", "Hekimoğlu", "Lumor", "Bedirhan Çetin",
+                "Haris Hajradinović", "Florent Hadergjonaj", "Fousseni Diabaté", "Aytaç Kara", "Petar Brlek", "Trezeguet",
+                "Mbaye Diagne", "Aytaç Kara", "Fofana", "Trezeguet"
+        });
+        m.put("Rizespor", new String[]{
+                "Gökhan Akkan", "Tarık Çetin",
+                "Hakan Arslan", "Selim Ay", "Mithat Pala", "Vedat Muriqi", "Furkan Bayır", "Damjan Bohar",
+                "Loïc Rémy", "Leonardo Da Silva", "Vedat Muriqi", "Sokol Çikalleshi", "Erkan Eyibil", "Skoda",
+                "Skoda", "Boldrin", "Vedat Muriqi", "Tunay Torun"
+        });
+        m.put("Samsunspor", new String[]{
+                "Okan Kocuk", "Albert Posiadała",
+                "Zeki Yavru", "Lubomir Satka", "Yunus Emre Çift", "Joe Mendes", "Soner Aydoğdu", "Rıdvan Yılmaz",
+                "Yunus Emre Çift", "Antoine Makoumbou", "Antoine Makoumbou", "Zeki Yavru", "Carlo Holse", "Marius Mouandilmadji",
+                "Marius Mouandilmadji", "Soner Gönül", "Doğacan Hasretoğlu", "Holse"
+        });
+        m.put("Ankaragücü", new String[]{
+                "Friedrich", "Rasit Pertev",
+                "Hakan Arslan", "Atakan Çankaya", "Daniel Larsson", "Hasan Ayaroğlu", "Pinto", "Saba Lobzhanidze",
+                "Anatoliy Tymoshchuk", "Fernandes", "Atakan Cangöz", "Saba Lobzhanidze", "Larsson", "Pinto",
+                "Mustafa Pektemek", "Daniel Larsson", "Saba Lobzhanidze", "Yusuf Erdoğan"
+        });
+        m.put("Pendikspor", new String[]{
+                "Ramazan Köse", "Ahmet Şahin",
+                "Engin Bekdemir", "Furkan Şenoğlu", "Halil İbrahim Pehlivan", "Hidayet Çakır", "Ozan Sol", "Ercan Coşkun",
+                "Onur Atasayar", "Halil Akbunar", "Halil İbrahim Sönmez", "Ozan Sol", "Coşkun", "Bahar",
+                "Erhan Çelenk", "Halil Akbunar", "Berk Yıldız", "Sönmez"
+        });
+        return m;
     }
 
     // 🆕 12 oyuncu: 2 GK + 10 outfield (LW/LB/CB/RB/RW/PV ikişerli)
