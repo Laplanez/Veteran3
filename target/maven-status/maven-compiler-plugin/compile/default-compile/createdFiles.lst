@@ -4,6 +4,7 @@ org\example\HandballSport.class
 org\example\LineupSelectorView.class
 org\example\SquadSelectorView$2.class
 org\example\League.class
+org\example\TrainingView$3.class
 org\example\Match.class
 org\example\Team.class
 org\example\HandballEngine.class
@@ -21,6 +22,7 @@ org\example\SquadSelectorView.class
 org\example\FootballMatch.class
 org\example\LoginView.class
 org\example\SubstitutionView.class
+org\example\TrainingView$2.class
 org\example\HandballMatch.class
 org\example\PauseMenu$SaveProvider.class
 org\example\JavaFXMain.class
@@ -34,6 +36,8 @@ org\example\SubstitutionView$1.class
 org\example\MainFootball.class
 org\example\Player.class
 org\example\StandingCalculator.class
+org\example\TrainingView.class
 org\example\Launcher.class
 org\example\Tactic.class
+org\example\TrainingView$1.class
 org\example\PauseMenu.class

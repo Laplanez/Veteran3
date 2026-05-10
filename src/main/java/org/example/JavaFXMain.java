@@ -1080,14 +1080,14 @@ public class JavaFXMain extends Application {
         m.put("Adana Demirspor", new String[]{
                 "Yassine Bounou", "Volkan Babacan",
                 "Jonas Svensson", "Çağlar Söyüncü", "Semih Güler", "Gökhan Inler", "Adil Demirbağ", "Kerem Kayaarası",
-                "Mario Balotelli", "Ndiaye", "Yusuf Sarı", "Younès Belhanda", "Henry Onyekuru", "Mounir Chouiar",
-                "Mario Balotelli", "Jonas", "Akintola", "Ben"
+                "Florent Shehu", "Ndiaye", "Yusuf Sarı", "Younès Belhanda", "Henry Onyekuru", "Mounir Chouiar",
+                "Mario Balotelli", "Jonas", "Akintola", "Hamza Jaganjac"
         });
         m.put("Konyaspor", new String[]{
                 "Bahadır Güngördü", "Eray Cömert",
                 "Calusic", "Ahmet Çalık", "Soner Dikmen", "Endri Çekiçi", "Adil Demirbağ", "Uğur Demirok",
                 "Amir Hadziahmetović", "Sokol Cikalleshi", "Marin Jakoliš", "Alper Uludağ", "Bjarnason", "Endri",
-                "Sokol Cikalleshi", "Mame Diouf", "Konyalı Forvet", "Genç Onuachu"
+                "Sokol Cikalleshi", "Mame Diouf", "Anderson Niangbo", "Muhammet Demir"
         });
         m.put("Antalyaspor", new String[]{
                 "Ferhat Kaplan", "Helton Leite",
@@ -1104,8 +1104,8 @@ public class JavaFXMain extends Application {
         m.put("Kayserispor", new String[]{
                 "Bilal Bayazıt", "Doğan Alemdar",
                 "Stéphane Sessègnon", "Bernard Mensah", "Joseph Attamah", "Hasan Hüseyin Acar", "Aaron Appindangoye", "Carlos Mané",
-                "Mensah", "Maxim", "Onur Bulut", "Talisca", "Pedro Henrique", "Cardoso",
-                "Mames Bahadır", "Mensah", "Carlos Eduardo", "Pedro Henrique"
+                "Mensah", "Maxim", "Onur Bulut", "Oliver Kemen", "Pedro Henrique", "Cardoso",
+                "Mames Bahadır", "Mensah", "Carlos Eduardo", "Carlos Mane"
         });
         m.put("Alanyaspor", new String[]{
                 "Ertuğrul Taşkıran", "Marafona",
@@ -1122,7 +1122,7 @@ public class JavaFXMain extends Application {
         m.put("Hatayspor", new String[]{
                 "Munir Mohamedi", "Erce Kardeşler",
                 "Dijksteel", "Kana-Biyik", "Strandberg", "Saint-Maximin", "Ben Rienstra", "Burak Öksüz",
-                "Aaron Boupendza", "Rúben Ribeiro", "Strandberg", "Doumbia", "Ümit Kurt", "Mame Thiam",
+                "Aaron Boupendza", "Rúben Ribeiro", "Strandberg", "Doumbia", "Ümit Kurt", "Mehdi Boudjemaa",
                 "Mame Thiam", "Boupendza", "Junior Sambia", "Ben Rienstra"
         });
         m.put("Kasımpaşa", new String[]{
@@ -1186,7 +1186,7 @@ public class JavaFXMain extends Application {
         }
         int spent = TrainingView.show(primaryStage, myTeam, isHandball, TrainingView.DEFAULT_BUDGET);
         trainingWeekDone = currentWeek;
-        btnTrain.setDisable(true); // bir sonraki haftaya kadar kapalı
+        btnTrain.setDisable(true);
         logs.getItems().add("");
         logs.getItems().add("🏋 ANTRENMAN — " + myTeam.getName()
                 + "  •  Harcanan puan: " + spent + " / " + TrainingView.DEFAULT_BUDGET);
