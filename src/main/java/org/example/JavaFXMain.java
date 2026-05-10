@@ -472,6 +472,7 @@ public class JavaFXMain extends Application {
         weeklySchedule.clear();
         int n = teams.size();
         List<Team> pool = new ArrayList<>(teams);
+        java.util.Collections.shuffle(pool);
         int rounds = n - 1;
         int halfSize = n / 2;
         MatchEngine footballEngine = isHandball ? null : new FootballEngine();

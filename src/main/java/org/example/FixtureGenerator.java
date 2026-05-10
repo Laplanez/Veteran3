@@ -1,6 +1,7 @@
 package org.example;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 class FixtureGenerator {
@@ -12,7 +13,10 @@ class FixtureGenerator {
             return schedule;
         }
 
+        // Her sezon başında rasgele fikstür için takımları karıştır
         List<Team> pool = new ArrayList<>(teams);
+        Collections.shuffle(pool);
+
         int rounds = numTeams - 1;
         int halfSize = numTeams / 2;
 
