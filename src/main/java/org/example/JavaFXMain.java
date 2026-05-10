@@ -22,7 +22,9 @@ public class JavaFXMain extends Application {
     private Button btnFootball = new Button("⚽ Futbol");
     private Button btnHandball = new Button("🤾 Hentbol");
     private Button btnNextWeek = new Button("▶ Sonraki Hafta");
+    private Button btnTrain = new Button("🏋 Antrenman");
     private Button btnReset = new Button("🔄 Yeni Sezona Başla");
+    private int trainingWeekDone = -1; // bu hafta antrenman yapıldı mı?
     private Label lblWeek = new Label("");
 
     private ComboBox<String> teamSelector = new ComboBox<>();
@@ -121,12 +123,14 @@ public class JavaFXMain extends Application {
         btnFootball.setMaxWidth(Double.MAX_VALUE);
         btnHandball.setMaxWidth(Double.MAX_VALUE);
         btnNextWeek.setMaxWidth(Double.MAX_VALUE);
+        btnTrain.setMaxWidth(Double.MAX_VALUE);
         btnReset.setMaxWidth(Double.MAX_VALUE);
         teamSelector.setMaxWidth(Double.MAX_VALUE);
 
         btnFootball.setStyle(btnBase + "-fx-background-color: " + COLOR_FOOTBALL + ";");
         btnHandball.setStyle(btnBase + "-fx-background-color: " + COLOR_HANDBALL + ";");
         btnNextWeek.setStyle(btnBase + "-fx-background-color: " + COLOR_PRIMARY + ";");
+        btnTrain.setStyle(btnBase + "-fx-background-color: linear-gradient(to right, #a78bfa, #22d3ee);");
         btnReset.setStyle("-fx-font-size: 13px; -fx-padding: 10 20; -fx-background-color: " + COLOR_GHOST
                 + "; -fx-text-fill: " + COLOR_TEXT + "; -fx-font-weight: bold; -fx-cursor: hand; "
                 + "-fx-background-radius: 12; -fx-border-color: #3b4a6b; -fx-border-radius: 12;");
@@ -148,6 +152,8 @@ public class JavaFXMain extends Application {
 
         btnNextWeek.setDisable(true);
         btnNextWeek.setVisible(false);
+        btnTrain.setDisable(true);
+        btnTrain.setVisible(false);
         btnReset.setDisable(true);
         btnReset.setVisible(false);
         teamSelector.setVisible(false);
@@ -158,6 +164,7 @@ public class JavaFXMain extends Application {
         btnFootball.setOnAction(e -> showTeamSelection("football"));
         btnHandball.setOnAction(e -> showTeamSelection("handball"));
         btnNextWeek.setOnAction(e -> playNextWeek());
+        btnTrain.setOnAction(e -> openTraining());
         btnReset.setOnAction(e -> resetAll());
 
         HBox sportButtons = new HBox(18, btnFootball, btnHandball);
@@ -166,7 +173,7 @@ public class JavaFXMain extends Application {
         HBox teamSelectBox = new HBox(12, lblSelectTeam, teamSelector);
         teamSelectBox.setAlignment(Pos.CENTER);
 
-        HBox controlButtons = new HBox(15, btnNextWeek, btnReset);
+        HBox controlButtons = new HBox(15, btnTrain, btnNextWeek, btnReset);
         controlButtons.setAlignment(Pos.CENTER);
 
         // Üst başlık şeridi
@@ -245,9 +252,9 @@ public class JavaFXMain extends Application {
                         int gf = Math.max(0, gd);
                         int ga = Math.max(0, -gd);
                         sb.append("TEAM:").append(t.getName())
-                          .append('|').append(t.getPoints())
-                          .append('|').append(gf)
-                          .append('|').append(ga).append('\n');
+                                .append('|').append(t.getPoints())
+                                .append('|').append(gf)
+                                .append('|').append(ga).append('\n');
                     }
                     return sb.toString();
                 },
@@ -432,6 +439,9 @@ public class JavaFXMain extends Application {
         lblSelectTeam.setVisible(false);
         btnNextWeek.setDisable(false);
         btnNextWeek.setVisible(true);
+        btnTrain.setVisible(true);
+        btnTrain.setDisable(false);
+        trainingWeekDone = -1;
         btnReset.setDisable(false);
         btnReset.setVisible(true);
     }
@@ -544,6 +554,7 @@ public class JavaFXMain extends Application {
     // ==================== FUTBOL: CANLI + TAKTİK ====================
     private void playMyFootballMatchLive(Match m, int winPoints) {
         btnNextWeek.setDisable(true);
+        btnTrain.setDisable(true);
         btnReset.setDisable(true);
         // Maç öncesi hazırlık (diziliş + ilk 11 + saha) playNextWeek() içinde yapıldı.
 
@@ -590,6 +601,7 @@ public class JavaFXMain extends Application {
                 refreshStandings();
                 checkSeasonEnd();
                 if (currentWeek < totalWeeks) btnNextWeek.setDisable(false);
+                if (currentWeek < totalWeeks) btnTrain.setDisable(false);
                 btnReset.setDisable(false);
             });
         }).start();
@@ -627,6 +639,7 @@ public class JavaFXMain extends Application {
     // ==================== HENTBOL: CANLI + TAKTİK ====================
     private void playMyHandballMatchLive(Match m, int winPoints) {
         btnNextWeek.setDisable(true);
+        btnTrain.setDisable(true);
         btnReset.setDisable(true);
         // Maç öncesi hazırlık (diziliş + ilk 7 + saha) playNextWeek() içinde yapıldı.
 
@@ -696,6 +709,7 @@ public class JavaFXMain extends Application {
                 refreshStandings();
                 checkSeasonEnd();
                 if (currentWeek < totalWeeks) btnNextWeek.setDisable(false);
+                if (currentWeek < totalWeeks) btnTrain.setDisable(false);
                 btnReset.setDisable(false);
             });
         }).start();
@@ -889,6 +903,9 @@ public class JavaFXMain extends Application {
         btnNextWeek.setDisable(true);
         btnNextWeek.setVisible(false);
         btnNextWeek.setText("▶ Sonraki Hafta");
+        btnTrain.setDisable(true);
+        btnTrain.setVisible(false);
+        trainingWeekDone = -1;
         btnReset.setDisable(true);
         btnReset.setVisible(false);
         teamSelector.setVisible(false);
@@ -945,6 +962,9 @@ public class JavaFXMain extends Application {
         btnNextWeek.setVisible(true);
         btnNextWeek.setDisable(currentWeek >= totalWeeks);
         if (currentWeek >= totalWeeks) btnNextWeek.setText("✅ Lig Tamamlandı");
+        btnTrain.setVisible(true);
+        btnTrain.setDisable(currentWeek >= totalWeeks);
+        trainingWeekDone = -1;
         btnReset.setVisible(true);
         btnReset.setDisable(false);
 
@@ -991,6 +1011,24 @@ public class JavaFXMain extends Application {
             p.setAttribute("Defense", 55 + (int)(Math.random() * 20));
             t.addPlayer(p);
         }
+    }
+
+    // ==================== ANTRENMAN ====================
+    private void openTraining() {
+        if (myTeam == null) return;
+        if (currentWeek >= totalWeeks) return;
+        if (trainingWeekDone == currentWeek) {
+            logs.getItems().add("   ⚠ Bu hafta için antrenman zaten tamamlandı. Sonraki haftayı oyna.");
+            logs.scrollTo(logs.getItems().size() - 1);
+            return;
+        }
+        int spent = TrainingView.show(primaryStage, myTeam, isHandball, TrainingView.DEFAULT_BUDGET);
+        trainingWeekDone = currentWeek;
+        btnTrain.setDisable(true); // bir sonraki haftaya kadar kapalı
+        logs.getItems().add("");
+        logs.getItems().add("🏋 ANTRENMAN — " + myTeam.getName()
+                + "  •  Harcanan puan: " + spent + " / " + TrainingView.DEFAULT_BUDGET);
+        logs.scrollTo(logs.getItems().size() - 1);
     }
 
     public static void main(String[] args) { launch(args); }
